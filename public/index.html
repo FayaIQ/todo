@@ -670,6 +670,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="stats" id="stats">
@@ -968,20 +969,31 @@
         }
 
         // إكمال مهمة
-        function completeTask(taskId) {
-            const taskIndex = tasks.findIndex(task => task.id === taskId);
-            if (taskIndex !== -1) {
-                tasks[taskIndex].completed = true;
-                tasks[taskIndex].status = 'مكتمل';
-                tasks[taskIndex].completedAt = new Date().toISOString();
-                
-                updateStats();
-                displayTasks();
-                
-                // عرض رسالة نجاح
-                showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
-            }
-        }
+       // دمج المنطقيتين: إرسال الطلب ثم تحديث المهام محليّاً
+async function completeTask(taskId) {
+  try {
+    const response = await fetch('/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: taskId }),
+    });
+    if (!response.ok) throw new Error('Fetch failed');
+    
+    // حدّث الحالة محليّاً بعد نجاح الطلب
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      task.completed = true;
+      task.status = 'مكتمل';
+      task.completedAt = new Date().toISOString();
+      updateStats();
+      displayTasks();
+      showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
+    }
+  } catch (err) {
+    showNotification('فشل إكمال المهمة ❌', 'error');
+  }
+}
+
 
         // حذف مهمة
         async function deleteTask(taskId) {
