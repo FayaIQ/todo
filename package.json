@@ -1,0 +1,33 @@
+{
+  "name": "telegram-todo-bot",
+  "version": "1.0.0",
+  "description": "Todo List Bot for Telegram with Web Interface",
+  "main": "bot.js",
+  "scripts": {
+    "start": "node bot.js",
+    "dev": "nodemon bot.js",
+    "web": "node server.js",
+    "install-deps": "npm install"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "todo",
+    "task-management",
+    "arabic"
+  ],
+  "author": "عمر",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "fs": "^0.0.1-security",
+    "node-telegram-bot-api": "^0.61.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
