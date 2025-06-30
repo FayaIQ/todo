@@ -145,6 +145,23 @@ body {
   opacity: 0.9;
 }
 
+.finish-day-btn {
+  background-color: #ff7f50;
+  color: #fff;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.finish-day-btn:hover {
+  opacity: 0.9;
+}
+
 .tasks-container {
   display: grid;
   gap: 20px;
@@ -313,11 +330,13 @@ body {
                 <button class="filter-btn" data-filter="pending">المعلقة</button>
                 <button class="filter-btn" data-filter="completed">المكتملة</button>
                 <button class="filter-btn" data-filter="high">عالية الأولوية</button>
+                <button class="filter-btn" data-filter="archived">الأيام المنتهية</button>
             </div>
             <button class="refresh-btn" onclick="loadTasks()">
                 <span>🔄</span>
                 تحديث
             </button>
+            <button class="finish-day-btn" onclick="finishDay()">إنهاء اليوم</button>
         </div>
 
         <div id="loadingState" class="loading" style="display: none;">
@@ -349,7 +368,7 @@ body {
                 
                 if (response.ok) {
                     const data = await response.json();
-                    tasks = data.tasks || [];
+                    tasks = (data.tasks || []).map(t => ({ archived: false, archivedAt: null, ...t }));
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
                     tasks = generateSampleTasks();
@@ -377,6 +396,7 @@ body {
                     priority: "عالي",
                     status: "جديد",
                     completed: false,
+                    archived: false,
                     createdAt: new Date(Date.now() - 86400000).toISOString(),
                     userId: 123456789,
                     username: "ahmed_user",
@@ -389,6 +409,7 @@ body {
                     priority: "متوسط",
                     status: "مكتمل",
                     completed: true,
+                    archived: false,
                     createdAt: new Date(Date.now() - 172800000).toISOString(),
                     completedAt: new Date(Date.now() - 86400000).toISOString(),
                     userId: 123456789,
@@ -402,6 +423,7 @@ body {
                     priority: "عالي",
                     status: "جديد",
                     completed: false,
+                    archived: false,
                     createdAt: new Date(Date.now() - 259200000).toISOString(),
                     userId: 987654321,
                     username: "mohammed_user",
@@ -414,6 +436,7 @@ body {
                     priority: "منخفض",
                     status: "جديد",
                     completed: false,
+                    archived: false,
                     createdAt: new Date(Date.now() - 345600000).toISOString(),
                     userId: 123456789,
                     username: "ahmed_user",
@@ -426,6 +449,7 @@ body {
                     priority: "عالي",
                     status: "مكتمل",
                     completed: true,
+                    archived: false,
                     createdAt: new Date(Date.now() - 432000000).toISOString(),
                     completedAt: new Date(Date.now() - 172800000).toISOString(),
                     userId: 987654321,
@@ -476,6 +500,8 @@ body {
                     return tasks.filter(task => task.completed);
                 case 'high':
                     return tasks.filter(task => task.priority === 'عالي');
+                case 'archived':
+                    return tasks.filter(task => task.archived);
                 default:
                     return tasks;
             }
@@ -574,7 +600,7 @@ body {
         // تنسيق التاريخ
         function formatDate(dateString) {
             const date = new Date(dateString);
-            return date.toLocaleDateString('ar-SA', {
+            return date.toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric',
@@ -608,6 +634,22 @@ async function completeTask(taskId) {
     showNotification('فشل إكمال المهمة ❌', 'error');
   }
 }
+
+        // إنهاء اليوم وأرشفة المهام
+        async function finishDay() {
+            if (!confirm('هل تريد إنهاء اليوم وأرشفة جميع المهام؟')) return;
+            try {
+                const response = await fetch('/finish_day', { method: 'POST' });
+                if (response.ok) {
+                    await loadTasks();
+                    showNotification('تم إنهاء اليوم بنجاح ✅', 'success');
+                } else {
+                    showNotification('حدث خطأ أثناء إنهاء اليوم ❌', 'error');
+                }
+            } catch (err) {
+                showNotification('فشل الاتصال بالخادم ❌', 'error');
+            }
+        }
 
 
         // حذف مهمة

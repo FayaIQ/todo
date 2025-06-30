@@ -98,6 +98,8 @@ bot.on('message', async (msg) => {
         completed: selected === 'مكتمل',
         createdAt: new Date().toISOString(),
         completedAt: selected === 'مكتمل' ? new Date().toISOString() : undefined,
+        archived: false,
+        archivedAt: null,
         userId: msg.from.id,
         username: msg.from.username || msg.from.first_name,
         tags: []
