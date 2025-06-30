@@ -162,6 +162,53 @@ body {
   opacity: 0.9;
 }
 
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px var(--shadow-light);
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+.countdown {
+  margin-inline-start: auto;
+  font-weight: 600;
+}
+
+.days-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.day-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: var(--surface-color);
+  box-shadow: 0 1px 4px var(--shadow-light);
+  cursor: pointer;
+}
+
+.day-btn.active {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
 .tasks-container {
   display: grid;
   gap: 20px;
@@ -305,47 +352,59 @@ body {
 
 <body>
     <div class="container">
-        <div class="stats" id="stats">
-            <div class="stat-card">
-                <div class="number" id="totalTasks">0</div>
-                <div class="label">إجمالي المهام</div>
+        <div class="tabs">
+            <button id="tasksTabBtn" class="tab-btn active">المهام</button>
+            <button id="daysTabBtn" class="tab-btn">الأيام المنتهية</button>
+        </div>
+
+        <div id="tasksTab">
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <div class="number" id="totalTasks">0</div>
+                    <div class="label">إجمالي المهام</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="pendingTasks">0</div>
+                    <div class="label">مهام معلقة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="completedTasks">0</div>
+                    <div class="label">مهام مكتملة</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="highPriorityTasks">0</div>
+                    <div class="label">مهام عالية الأولوية</div>
+                </div>
             </div>
-            <div class="stat-card">
-                <div class="number" id="pendingTasks">0</div>
-                <div class="label">مهام معلقة</div>
+
+            <div class="controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">جميع المهام</button>
+                    <button class="filter-btn" data-filter="pending">المعلقة</button>
+                    <button class="filter-btn" data-filter="completed">المكتملة</button>
+                    <button class="filter-btn" data-filter="high">عالية الأولوية</button>
+                </div>
+                <div class="countdown" id="countdown">--:--:--</div>
+                <button class="refresh-btn" onclick="loadTasks()">
+                    <span>🔄</span>
+                    تحديث
+                </button>
+                <button class="finish-day-btn" onclick="finishDay()">إنهاء اليوم</button>
             </div>
-            <div class="stat-card">
-                <div class="number" id="completedTasks">0</div>
-                <div class="label">مهام مكتملة</div>
+
+            <div id="loadingState" class="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>جاري تحميل المهام...</p>
             </div>
-            <div class="stat-card">
-                <div class="number" id="highPriorityTasks">0</div>
-                <div class="label">مهام عالية الأولوية</div>
+
+            <div class="tasks-container" id="tasksContainer">
+                <!-- المهام ستظهر هنا -->
             </div>
         </div>
 
-        <div class="controls">
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="all">جميع المهام</button>
-                <button class="filter-btn" data-filter="pending">المعلقة</button>
-                <button class="filter-btn" data-filter="completed">المكتملة</button>
-                <button class="filter-btn" data-filter="high">عالية الأولوية</button>
-                <button class="filter-btn" data-filter="archived">الأيام المنتهية</button>
-            </div>
-            <button class="refresh-btn" onclick="loadTasks()">
-                <span>🔄</span>
-                تحديث
-            </button>
-            <button class="finish-day-btn" onclick="finishDay()">إنهاء اليوم</button>
-        </div>
-
-        <div id="loadingState" class="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <p>جاري تحميل المهام...</p>
-        </div>
-
-        <div class="tasks-container" id="tasksContainer">
-            <!-- المهام ستظهر هنا -->
+        <div id="daysTab" style="display:none;">
+            <div class="days-list" id="daysList"></div>
+            <div class="tasks-container" id="dayTasksContainer"></div>
         </div>
     </div>
 
@@ -353,6 +412,8 @@ body {
         // بيانات المهام
         let tasks = [];
         let currentFilter = 'all';
+        let lastFinished = null;
+        let countdownInterval;
 
         // تحميل المهام من ملف JSON
         async function loadTasks() {
@@ -365,22 +426,29 @@ body {
             try {
                 // محاولة قراءة ملف المهام
                 const response = await fetch('tasks.json');
-                
+
                 if (response.ok) {
                     const data = await response.json();
-                    tasks = (data.tasks || []).map(t => ({ archived: false, archivedAt: null, ...t }));
+                    tasks = (data.tasks || []).map(t => ({ archived: t.archived || false, archivedAt: t.archivedAt || null, ...t }));
+                    lastFinished = new Date(data.lastFinished || data.lastUpdated).getTime();
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
                     tasks = generateSampleTasks();
+                    lastFinished = Date.now();
                 }
-                
+
                 updateStats();
                 displayTasks();
+                displayArchivedDays();
+                startCountdown();
             } catch (error) {
                 console.log('لم يتم العثور على ملف المهام، سيتم استخدام بيانات تجريبية');
                 tasks = generateSampleTasks();
+                lastFinished = Date.now();
                 updateStats();
                 displayTasks();
+                displayArchivedDays();
+                startCountdown();
             } finally {
                 loadingState.style.display = 'none';
             }
@@ -449,11 +517,27 @@ body {
                     priority: "عالي",
                     status: "مكتمل",
                     completed: true,
-                    archived: false,
+                    archived: true,
+                    archivedAt: new Date(Date.now() - 86400000).toISOString(),
                     createdAt: new Date(Date.now() - 432000000).toISOString(),
                     completedAt: new Date(Date.now() - 172800000).toISOString(),
                     userId: 987654321,
                     username: "fatima_user",
+                    tags: []
+                },
+                {
+                    id: 6,
+                    title: "مهام قديمة",
+                    description: "مثال ليوم سابق",
+                    priority: "متوسط",
+                    status: "مكتمل",
+                    completed: true,
+                    archived: true,
+                    archivedAt: new Date(Date.now() - 172800000).toISOString(),
+                    createdAt: new Date(Date.now() - 604800000).toISOString(),
+                    completedAt: new Date(Date.now() - 345600000).toISOString(),
+                    userId: 123456789,
+                    username: "ahmed_user",
                     tags: []
                 }
             ];
@@ -461,10 +545,11 @@ body {
 
         // تحديث الإحصائيات
         function updateStats() {
-            const totalTasks = tasks.length;
-            const pendingTasks = tasks.filter(task => !task.completed).length;
-            const completedTasks = tasks.filter(task => task.completed).length;
-            const highPriorityTasks = tasks.filter(task => task.priority === 'عالي').length;
+            const active = tasks.filter(t => !t.archived);
+            const totalTasks = active.length;
+            const pendingTasks = active.filter(task => !task.completed).length;
+            const completedTasks = active.filter(task => task.completed).length;
+            const highPriorityTasks = active.filter(task => task.priority === 'عالي' && !task.completed).length;
 
             document.getElementById('totalTasks').textContent = totalTasks;
             document.getElementById('pendingTasks').textContent = pendingTasks;
@@ -495,15 +580,13 @@ body {
         function filterTasks() {
             switch(currentFilter) {
                 case 'pending':
-                    return tasks.filter(task => !task.completed);
+                    return tasks.filter(task => !task.completed && !task.archived);
                 case 'completed':
-                    return tasks.filter(task => task.completed);
+                    return tasks.filter(task => task.completed && !task.archived);
                 case 'high':
-                    return tasks.filter(task => task.priority === 'عالي');
-                case 'archived':
-                    return tasks.filter(task => task.archived);
+                    return tasks.filter(task => task.priority === 'عالي' && !task.completed && !task.archived);
                 default:
-                    return tasks;
+                    return tasks.filter(task => !task.completed && !task.archived);
             }
         }
         async function completeTask(taskId) {
@@ -599,14 +682,14 @@ body {
 
         // تنسيق التاريخ
         function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            const d = new Date(dateString);
+            const y = d.getFullYear();
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
+            let h = d.getHours();
+            const ampm = h >= 12 ? 'pm' : 'am';
+            h = h % 12 || 12;
+            return `${y}/${m}/${day} ${h}${ampm}`;
         }
 
         // إكمال مهمة
@@ -676,6 +759,65 @@ async function completeTask(taskId) {
     }
 }
 
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+
+        function updateCountdown() {
+            const countdownEl = document.getElementById('countdown');
+            if (!lastFinished) { countdownEl.textContent = '--:--:--'; return; }
+            const end = lastFinished + 12 * 60 * 60 * 1000;
+            let diff = end - Date.now();
+            if (diff <= 0) { countdownEl.textContent = '00:00:00'; return; }
+            const h = Math.floor(diff / 3600000).toString().padStart(2,'0');
+            diff %= 3600000;
+            const m = Math.floor(diff / 60000).toString().padStart(2,'0');
+            diff %= 60000;
+            const s = Math.floor(diff / 1000).toString().padStart(2,'0');
+            countdownEl.textContent = `${h}:${m}:${s}`;
+        }
+
+        function displayArchivedDays() {
+            const groups = {};
+            tasks.forEach(t => {
+                if (t.archived && t.archivedAt) {
+                    const day = t.archivedAt.split('T')[0];
+                    (groups[day] = groups[day] || []).push(t);
+                }
+            });
+
+            const days = Object.keys(groups).sort().reverse();
+            const list = document.getElementById('daysList');
+            list.innerHTML = days.map(d => `<button class="day-btn" data-day="${d}">${d}</button>`).join('');
+
+            list.querySelectorAll('.day-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    list.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    showDayTasks(groups[btn.dataset.day] || [], btn.dataset.day);
+                });
+            });
+
+            if (days.length > 0) {
+                const first = list.querySelector('.day-btn');
+                first.classList.add('active');
+                showDayTasks(groups[days[0]], days[0]);
+            } else {
+                document.getElementById('dayTasksContainer').innerHTML = '<p class="empty-state">لا توجد أيام منتهية</p>';
+            }
+        }
+
+        function showDayTasks(dayTasks, day) {
+            const container = document.getElementById('dayTasksContainer');
+            if (dayTasks.length === 0) {
+                container.innerHTML = '<p class="empty-state">لا توجد مهام لهذا اليوم</p>';
+            } else {
+                container.innerHTML = `<h3>مهام ${day}</h3>` + dayTasks.map(createTaskCard).join('');
+            }
+        }
+
         // عرض الإشعارات
         function showNotification(message, type = 'info') {
             // إنشاء عنصر الإشعار
@@ -724,6 +866,25 @@ async function completeTask(taskId) {
             });
         });
 
+        function showTab(name) {
+            const tasksTab = document.getElementById('tasksTab');
+            const daysTab = document.getElementById('daysTab');
+            if (name === 'tasks') {
+                tasksTab.style.display = 'block';
+                daysTab.style.display = 'none';
+                document.getElementById('tasksTabBtn').classList.add('active');
+                document.getElementById('daysTabBtn').classList.remove('active');
+            } else {
+                tasksTab.style.display = 'none';
+                daysTab.style.display = 'block';
+                document.getElementById('tasksTabBtn').classList.remove('active');
+                document.getElementById('daysTabBtn').classList.add('active');
+            }
+        }
+
+        document.getElementById('tasksTabBtn').addEventListener('click', () => showTab('tasks'));
+        document.getElementById('daysTabBtn').addEventListener('click', () => showTab('days'));
+
         // إضافة الأنماط المتحركة
         const style = document.createElement('style');
         style.textContent = `
@@ -755,7 +916,10 @@ async function completeTask(taskId) {
         setInterval(loadTasks, 30000);
 
         // تحميل المهام عند بدء التشغيل
-        window.addEventListener('load', loadTasks);
+        window.addEventListener('load', () => {
+            showTab('tasks');
+            loadTasks();
+        });
     </script>
 </body>
 </html>
