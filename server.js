@@ -73,10 +73,10 @@ app.post('/delete', async (req, res) => {
     }
 });
 
-// ✅ تشغيل السيرفر
-app.listen(PORT, () => {
-    console.log(`✅ السيرفر شغال على http://localhost:${PORT}`);
-});
+// // ✅ تشغيل السيرفر
+// app.listen(PORT, () => {
+//     console.log(`✅ السيرفر شغال على http://localhost:${PORT}`);
+// });
 
 // ✅ تشغيل البوت أيضاً
 require('./bot');
