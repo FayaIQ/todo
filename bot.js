@@ -123,7 +123,7 @@ const PORT = process.env.PORT || 3000;
 
 // مجرد اختبار حتى Railway يعرف التطبيق شغّال
 app.get('/', (req, res) => {
-  res.send('Telegram bot is running...');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
