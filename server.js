@@ -77,3 +77,6 @@ app.post('/delete', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`✅ السيرفر شغال على http://localhost:${PORT}`);
 });
+
+// ✅ تشغيل البوت أيضاً
+require('./bot');

@@ -4,7 +4,7 @@
   "description": "Todo List Bot for Telegram with Web Interface",
   "main": "bot.js",
   "scripts": {
-    "start": "node bot.js",
+    "start": "node server.js",
     "dev": "nodemon bot.js",
     "web": "node server.js",
     "install-deps": "npm install"
