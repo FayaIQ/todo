@@ -16,11 +16,7 @@
   --surface-color: #FFFFFF;
   --text-primary: #333333;
   --text-secondary: #666666;
-  --accent-color: #A3BFD9;
-  --success-color: #34D399;
-  --warning-color: #F59E0B;
-  --danger-color: #F87171;
-  --archive-color: #6B7280;
+  --accent-color: #A3BFD9; /* لمسة هادئة */
   --border-radius: 12px;
   --shadow-light: rgba(0, 0, 0, 0.05);
   --shadow-strong: rgba(0, 0, 0, 0.1);
@@ -68,7 +64,7 @@ body {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 24px;
   margin-bottom: 40px;
 }
@@ -86,6 +82,12 @@ body {
   box-shadow: 0 4px 16px var(--shadow-strong);
 }
 
+.stat-card .icon {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+  margin-bottom: 12px;
+}
+
 .stat-card .number {
   font-size: 2rem;
   font-weight: 500;
@@ -96,69 +98,6 @@ body {
   font-size: 1rem;
   color: var(--text-secondary);
   margin-top: 4px;
-}
-
-.day-actions {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 30px;
-  padding: 20px;
-  background-color: var(--surface-color);
-  border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px var(--shadow-light);
-}
-
-.end-day-btn {
-  padding: 14px 28px;
-  background-color: var(--warning-color);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.end-day-btn:hover {
-  background-color: #D97706;
-  transform: translateY(-2px);
-}
-
-.end-day-btn:disabled {
-  background-color: var(--text-secondary);
-  cursor: not-allowed;
-  transform: none;
-}
-
-.view-toggle {
-  display: flex;
-  gap: 8px;
-  background-color: var(--bg-color);
-  padding: 4px;
-  border-radius: var(--border-radius);
-}
-
-.view-btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: calc(var(--border-radius) - 4px);
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  background-color: transparent;
-  color: var(--text-secondary);
-}
-
-.view-btn.active {
-  background-color: var(--surface-color);
-  color: var(--text-primary);
-  box-shadow: 0 2px 4px var(--shadow-light);
 }
 
 .controls {
@@ -224,11 +163,6 @@ body {
   box-shadow: 0 4px 16px var(--shadow-strong);
 }
 
-.task-card.archived {
-  border-left: 4px solid var(--archive-color);
-  opacity: 0.8;
-}
-
 .task-header {
   display: flex;
   justify-content: space-between;
@@ -256,19 +190,11 @@ body {
   margin-bottom: 16px;
 }
 
-.task-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
 .meta-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  display: inline-block;
   font-size: 0.9rem;
   color: var(--text-secondary);
+  margin-right: 12px;
 }
 
 .priority-badge,
@@ -286,7 +212,6 @@ body {
 
 .status-completed { background-color: #D1FAE5; color: #065F46; }
 .status-pending   { background-color: #FEF3C7; color: #92400E; }
-.status-archived  { background-color: #E5E7EB; color: #374151; }
 
 .task-actions {
   margin-top: 20px;
@@ -294,89 +219,27 @@ body {
   gap: 12px;
 }
 
-.action-btn {
+.complete-btn,
+.delete-btn {
   padding: 10px 20px;
   border: none;
   border-radius: var(--border-radius);
   font-size: 0.95rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .complete-btn {
-  background-color: var(--success-color);
+  background-color: #34D399;
   color: #fff;
 }
 
 .delete-btn {
-  background-color: var(--danger-color);
+  background-color: #F87171;
   color: #fff;
 }
 
-.restore-btn {
-  background-color: var(--archive-color);
-  color: #fff;
-}
-
-.action-btn:hover {
-  transform: translateY(-1px);
-}
-
-.archive-section {
-  margin-top: 40px;
-  padding-top: 30px;
-  border-top: 2px solid var(--bg-color);
-}
-
-.archive-header {
-  display: flex;
-  justify-content: between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.archive-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--archive-color);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.day-card {
-  background-color: var(--surface-color);
-  border-radius: var(--border-radius);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px var(--shadow-light);
-  border-left: 4px solid var(--archive-color);
-}
-
-.day-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.day-date {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.day-stats {
-  display: flex;
-  gap: 16px;
-  font-size: 0.9rem;
-  color: var(--text-secondary);
-}
-
+/* Empty State */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -393,130 +256,86 @@ body {
   font-size: 1.2rem;
 }
 
+/* Telegram Info */
+.telegram-info {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  margin-bottom: 40px;
+}
+
+.telegram-info h3 {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.telegram-info p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .stats { grid-template-columns: 1fr; }
   .tasks-container { grid-template-columns: 1fr; }
   .controls { flex-direction: column; }
-  .day-actions { flex-direction: column; }
-  .view-toggle { flex-direction: column; }
 }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(-50%) translateY(-20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideOut {
-  from {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(-50%) translateY(-20px);
-    opacity: 0;
-  }
-}
     </style>
 </head>
 
 <body>
     <div class="container">
-        <div class="header">
-            <h1>قائمة المهام اليومية</h1>
-            <p>إدارة ذكية للمهام مع الأرشفة التلقائية</p>
+        <div class="stats" id="stats">
+            <div class="stat-card">
+                <div class="number" id="totalTasks">0</div>
+                <div class="label">إجمالي المهام</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="pendingTasks">0</div>
+                <div class="label">مهام معلقة</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="completedTasks">0</div>
+                <div class="label">مهام مكتملة</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="highPriorityTasks">0</div>
+                <div class="label">مهام عالية الأولوية</div>
+            </div>
         </div>
 
-        <div class="day-actions">
-            <button class="end-day-btn" onclick="endCurrentDay()">
-                🌙 إنهاء اليوم
+        <div class="controls">
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">جميع المهام</button>
+                <button class="filter-btn" data-filter="pending">المعلقة</button>
+                <button class="filter-btn" data-filter="completed">المكتملة</button>
+                <button class="filter-btn" data-filter="high">عالية الأولوية</button>
+            </div>
+            <button class="refresh-btn" onclick="loadTasks()">
+                <span>🔄</span>
+                تحديث
             </button>
-            <div class="view-toggle">
-                <button class="view-btn active" data-view="today" onclick="switchView('today')">
-                    📋 اليوم الحالي
-                </button>
-                <button class="view-btn" data-view="archive" onclick="switchView('archive')">
-                    📦 الأيام المنتهية
-                </button>
-            </div>
-        </div>
-
-        <div id="todayView">
-            <div class="stats" id="stats">
-                <div class="stat-card">
-                    <div class="number" id="totalTasks">0</div>
-                    <div class="label">إجمالي المهام</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="pendingTasks">0</div>
-                    <div class="label">مهام معلقة</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="completedTasks">0</div>
-                    <div class="label">مهام مكتملة</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="highPriorityTasks">0</div>
-                    <div class="label">مهام عالية الأولوية</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="autoArchiveTimer">--:--</div>
-                    <div class="label">الأرشفة التلقائية</div>
-                </div>
-            </div>
-
-            <div class="controls">
-                <div class="filter-buttons">
-                    <button class="filter-btn active" data-filter="all">جميع المهام</button>
-                    <button class="filter-btn" data-filter="pending">المعلقة</button>
-                    <button class="filter-btn" data-filter="completed">المكتملة</button>
-                    <button class="filter-btn" data-filter="high">عالية الأولوية</button>
-                </div>
-                <button class="refresh-btn" onclick="loadTasks()">
-                    <span>🔄</span>
-                    تحديث
-                </button>
-            </div>
-
-            <div class="tasks-container" id="tasksContainer">
-                <!-- المهام ستظهر هنا -->
-            </div>
-        </div>
-
-        <div id="archiveView" style="display: none;">
-            <div class="archive-section">
-                <div class="archive-header">
-                    <div class="archive-title">
-                        📦 الأيام المنتهية
-                    </div>
-                </div>
-                <div id="archivedDaysContainer">
-                    <!-- الأيام المؤرشفة ستظهر هنا -->
-                </div>
-            </div>
         </div>
 
         <div id="loadingState" class="loading" style="display: none;">
             <div class="loading-spinner"></div>
             <p>جاري تحميل المهام...</p>
         </div>
+
+        <div class="tasks-container" id="tasksContainer">
+            <!-- المهام ستظهر هنا -->
+        </div>
     </div>
 
     <script>
-        // بيانات المهام والأرشيف
+        // بيانات المهام
         let tasks = [];
-        let archivedDays = [];
         let currentFilter = 'all';
-        let currentView = 'today';
-        let autoArchiveTimer = null;
-        let dayStartTime = new Date();
 
-        // تحميل المهام والأرشيف
+        // تحميل المهام من ملف JSON
         async function loadTasks() {
             const loadingState = document.getElementById('loadingState');
             const tasksContainer = document.getElementById('tasksContainer');
@@ -531,26 +350,18 @@ body {
                 if (response.ok) {
                     const data = await response.json();
                     tasks = data.tasks || [];
-                    archivedDays = data.archivedDays || [];
-                    dayStartTime = data.dayStartTime ? new Date(data.dayStartTime) : new Date();
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
                     tasks = generateSampleTasks();
-                    archivedDays = generateSampleArchive();
-                    dayStartTime = new Date();
                 }
                 
                 updateStats();
                 displayTasks();
-                startAutoArchiveTimer();
             } catch (error) {
                 console.log('لم يتم العثور على ملف المهام، سيتم استخدام بيانات تجريبية');
                 tasks = generateSampleTasks();
-                archivedDays = generateSampleArchive();
-                dayStartTime = new Date();
                 updateStats();
                 displayTasks();
-                startAutoArchiveTimer();
             } finally {
                 loadingState.style.display = 'none';
             }
@@ -583,164 +394,45 @@ body {
                     userId: 123456789,
                     username: "sara_user",
                     tags: []
-                }
-            ];
-        }
-
-        // إنشاء بيانات أرشيف تجريبية
-        function generateSampleArchive() {
-            return [
+                },
                 {
-                    date: new Date(Date.now() - 86400000).toISOString(),
-                    tasks: [
-                        {
-                            id: 100,
-                            title: "مراجعة الإيميلات",
-                            description: "مراجعة والرد على جميع الإيميلات المهمة",
-                            priority: "متوسط",
-                            status: "مكتمل",
-                            completed: true,
-                            createdAt: new Date(Date.now() - 172800000).toISOString(),
-                            completedAt: new Date(Date.now() - 86400000).toISOString(),
-                            userId: 123456789,
-                            username: "ahmed_user"
-                        }
-                    ]
+                    id: 3,
+                    title: "حجز موعد الطبيب",
+                    description: "حجز موعد للفحص الدوري",
+                    priority: "عالي",
+                    status: "جديد",
+                    completed: false,
+                    createdAt: new Date(Date.now() - 259200000).toISOString(),
+                    userId: 987654321,
+                    username: "mohammed_user",
+                    tags: []
+                },
+                {
+                    id: 4,
+                    title: "تنظيف السيارة",
+                    description: "",
+                    priority: "منخفض",
+                    status: "جديد",
+                    completed: false,
+                    createdAt: new Date(Date.now() - 345600000).toISOString(),
+                    userId: 123456789,
+                    username: "ahmed_user",
+                    tags: []
+                },
+                {
+                    id: 5,
+                    title: "دفع فواتير الكهرباء",
+                    description: "دفع فاتورة الكهرباء قبل انتهاء الموعد النهائي",
+                    priority: "عالي",
+                    status: "مكتمل",
+                    completed: true,
+                    createdAt: new Date(Date.now() - 432000000).toISOString(),
+                    completedAt: new Date(Date.now() - 172800000).toISOString(),
+                    userId: 987654321,
+                    username: "fatima_user",
+                    tags: []
                 }
             ];
-        }
-
-        // بدء مؤقت الأرشفة التلقائية
-        function startAutoArchiveTimer() {
-            if (autoArchiveTimer) {
-                clearInterval(autoArchiveTimer);
-            }
-
-            autoArchiveTimer = setInterval(() => {
-                const now = new Date();
-                const elapsed = now - dayStartTime;
-                const twelveHours = 12 * 60 * 60 * 1000; // 12 ساعة بالميلي ثانية
-                const remaining = twelveHours - elapsed;
-
-                if (remaining <= 0) {
-                    // أرشف تلقائياً بعد 12 ساعة
-                    endCurrentDay(true);
-                } else {
-                    // عرض الوقت المتبقي
-                    const hours = Math.floor(remaining / (60 * 60 * 1000));
-                    const minutes = Math.floor((remaining % (60 * 60 * 1000)) / (60 * 1000));
-                    document.getElementById('autoArchiveTimer').textContent = 
-                        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-                }
-            }, 1000);
-        }
-
-        // إنهاء اليوم الحالي
-        function endCurrentDay(isAutomatic = false) {
-            if (!isAutomatic && !confirm('هل أنت متأكد من إنهاء اليوم الحالي؟ ستنتقل جميع المهام إلى الأرشيف.')) {
-                return;
-            }
-
-            // إنشاء يوم مؤرشف
-            const archivedDay = {
-                date: dayStartTime.toISOString(),
-                endDate: new Date().toISOString(),
-                tasks: [...tasks]
-            };
-
-            // إضافة اليوم إلى الأرشيف
-            archivedDays.unshift(archivedDay);
-
-            // مسح المهام الحالية
-            tasks = [];
-
-            // إعادة تعيين وقت بداية اليوم
-            dayStartTime = new Date();
-
-            // حفظ البيانات
-            saveTasks();
-
-            // تحديث العرض
-            updateStats();
-            displayTasks();
-            displayArchivedDays();
-
-            // إعادة بدء المؤقت
-            startAutoArchiveTimer();
-
-            showNotification(
-                isAutomatic ? 
-                'تم أرشفة المهام تلقائياً بعد 12 ساعة 📦' : 
-                'تم إنهاء اليوم وأرشفة المهام 📦', 
-                'success'
-            );
-        }
-
-        // تبديل العرض بين اليوم الحالي والأرشيف
-        function switchView(view) {
-            currentView = view;
-            
-            // تحديث أزرار العرض
-            document.querySelectorAll('.view-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            document.querySelector(`[data-view="${view}"]`).classList.add('active');
-
-            // إظهار/إخفاء القوائم
-            if (view === 'today') {
-                document.getElementById('todayView').style.display = 'block';
-                document.getElementById('archiveView').style.display = 'none';
-            } else {
-                document.getElementById('todayView').style.display = 'none';
-                document.getElementById('archiveView').style.display = 'block';
-                displayArchivedDays();
-            }
-        }
-
-        // عرض الأيام المؤرشفة
-        function displayArchivedDays() {
-            const container = document.getElementById('archivedDaysContainer');
-
-            if (archivedDays.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📦</div>
-                        <h3>لا توجد أيام مؤرشفة</h3>
-                        <p>ستظهر هنا الأيام التي تم إنهاؤها</p>
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = archivedDays.map(day => createDayCard(day)).join('');
-        }
-
-        // إنشاء بطاقة يوم مؤرشف
-        function createDayCard(day) {
-            const dayDate = new Date(day.date);
-            const endDate = day.endDate ? new Date(day.endDate) : null;
-            const totalTasks = day.tasks.length;
-            const completedTasks = day.tasks.filter(task => task.completed).length;
-            const pendingTasks = totalTasks - completedTasks;
-
-            return `
-                <div class="day-card">
-                    <div class="day-header">
-                        <div class="day-date">
-                            📅 ${formatDateEnglish(dayDate)}
-                            ${endDate ? ` - ${formatDateEnglish(endDate)}` : ''}
-                        </div>
-                        <div class="day-stats">
-                            <span>📝 ${totalTasks} مهمة</span>
-                            <span>✅ ${completedTasks} مكتملة</span>
-                            <span>⏳ ${pendingTasks} معلقة</span>
-                        </div>
-                    </div>
-                    <div class="archived-tasks">
-                        ${day.tasks.map(task => createTaskCard(task, true)).join('')}
-                    </div>
-                </div>
-            `;
         }
 
         // تحديث الإحصائيات
@@ -772,7 +464,7 @@ body {
                 return;
             }
 
-            container.innerHTML = filteredTasks.map(task => createTaskCard(task, false)).join('');
+            container.innerHTML = filteredTasks.map(task => createTaskCard(task)).join('');
         }
 
         // تصفية المهام
@@ -788,10 +480,32 @@ body {
                     return tasks;
             }
         }
+        async function completeTask(taskId) {
+    try {
+        const response = await fetch('/complete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: taskId }),
+        });
+
+        if (response.ok) {
+            // حدث البيانات من جديد
+            await loadTasks();
+            showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
+        } else {
+            showNotification('حدث خطأ أثناء إكمال المهمة ❌', 'error');
+        }
+    } catch (err) {
+        showNotification('فشل الاتصال بالخادم ❌', 'error');
+    }
+}
+
 
         // إنشاء بطاقة المهمة
-        function createTaskCard(task, isArchived = false) {
-            const priorityClass = `priority-${task.priority === 'عالي' ? 'high' : task.priority === 'متوسط' ? 'medium' : 'low'}`;
+        function createTaskCard(task) {
+            const priorityClass = `${task.priority === 'عالي' ? 'high' : task.priority === 'متوسط' ? 'medium' : 'low'}-priority`;
             const statusClass = task.completed ? 'completed' : '';
             const statusIcon = task.completed ? '✅' : '⏳';
             const priorityIcon = {
@@ -801,7 +515,7 @@ body {
             }[task.priority] || '📋';
 
             return `
-                <div class="task-card ${priorityClass} ${statusClass} ${isArchived ? 'archived' : ''}">
+                <div class="task-card ${priorityClass} ${statusClass}">
                     <div class="task-header">
                         <div>
                             <div class="task-title">${statusIcon} ${task.title}</div>
@@ -812,117 +526,197 @@ body {
                     
                     <div class="task-meta">
                         <div class="meta-item">
-                            <span>${priorityIcon}</span>
-                            <span class="priority-badge ${priorityClass}">
+                            <span class="meta-icon">${priorityIcon}</span>
+                            <span class="priority-badge priority-${task.priority === 'عالي' ? 'high' : task.priority === 'متوسط' ? 'medium' : 'low'}">
                                 ${task.priority}
                             </span>
                         </div>
                         
                         <div class="meta-item">
-                            <span>📊</span>
-                            <span class="status-badge status-${task.completed ? 'completed' : isArchived ? 'archived' : 'pending'}">
-                                ${isArchived ? 'مؤرشف' : task.status}
+                            <span class="meta-icon">📊</span>
+                            <span class="status-badge status-${task.completed ? 'completed' : 'pending'}">
+                                ${task.status}
                             </span>
                         </div>
                         
                         <div class="meta-item">
-                            <span>👤</span>
+                            <span class="meta-icon">👤</span>
                             <span>@${task.username}</span>
                         </div>
                         
-                        <!-- أكمل داخل <script> بعد سطر عرض تاريخ الإنشاء -->
-                            <div class="meta-item">
-                                <span>📅</span>
-                                <span>${formatDateEnglish(task.createdAt)}</span>
-                            </div>
-                        </div> <!-- نهاية task-meta -->
-
-                        <div class="task-actions">
-                            ${isArchived
-                                ? `<button class="action-btn restore-btn" onclick="restoreTask(${task.id})">
-                                        ↩ استرجاع
-                                   </button>`
-                                : `<button class="action-btn complete-btn" onclick="completeTask(${task.id})">
-                                        ✅ إكمال
-                                   </button>
-                                   <button class="action-btn delete-btn" onclick="deleteTask(${task.id})">
-                                        🗑 حذف
-                                   </button>`
-                            }
+                        <div class="meta-item">
+                            <span class="meta-icon">📅</span>
+                            <span>${formatDate(task.createdAt)}</span>
                         </div>
+                        
+                        ${task.completedAt ? `
+                            <div class="meta-item">
+                                <span class="meta-icon">✅</span>
+                                <span>${formatDate(task.completedAt)}</span>
+                            </div>
+                        ` : ''}
                     </div>
-                `;
-            }
+                    
+                    <div class="task-actions">
+                        ${!task.completed ? `
+                            <button class="action-btn complete-btn" onclick="completeTask(${task.id})">
+                                ✅ إكمال
+                            </button>
+                        ` : ''}
+                        <button class="action-btn delete-btn" onclick="deleteTask(${task.id})">
+                            🗑️ حذف
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
 
-            // حفظ المهام والأرشيف في localStorage
-            function saveTasks() {
-                const data = {
-                    tasks,
-                    archivedDays,
-                    dayStartTime: dayStartTime.toISOString()
-                };
-                localStorage.setItem('tasksData', JSON.stringify(data));
-            }
+        // تنسيق التاريخ
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ar-SA', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
 
-            // دالة لتنسيق التاريخ (مثال: Jul 1, 2025)
-            function formatDateEnglish(date) {
-                const d = new Date(date);
-                return d.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                });
-            }
+        // إكمال مهمة
+       // دمج المنطقيتين: إرسال الطلب ثم تحديث المهام محليّاً
+async function completeTask(taskId) {
+  try {
+    const response = await fetch('/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: taskId }),
+    });
+    if (!response.ok) throw new Error('Fetch failed');
+    
+    // حدّث الحالة محليّاً بعد نجاح الطلب
+    const task = tasks.find(t => t.id === taskId);
+    if (task) {
+      task.completed = true;
+      task.status = 'مكتمل';
+      task.completedAt = new Date().toISOString();
+      updateStats();
+      displayTasks();
+      showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
+    }
+  } catch (err) {
+    showNotification('فشل إكمال المهمة ❌', 'error');
+  }
+}
 
-            // تعليم المهمة كمكتملة
-            function completeTask(id) {
-                const task = tasks.find(t => t.id === id);
-                if (task && !task.completed) {
-                    task.completed = true;
-                    task.status = 'مكتمل';
-                    task.completedAt = new Date().toISOString();
-                    saveTasks();
-                    updateStats();
-                    displayTasks();
-                    showNotification('تمت علامة المهمة كمكتملة ✅', 'success');
-                }
-            }
 
-            // حذف المهمة من القائمة
-            function deleteTask(id) {
-                tasks = tasks.filter(t => t.id !== id);
-                saveTasks();
-                updateStats();
+        // حذف مهمة
+        async function deleteTask(taskId) {
+    if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) return;
+
+    try {
+        const response = await fetch('/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ id: taskId }),
+        });
+
+        if (response.ok) {
+            await loadTasks();
+            showNotification('تم حذف المهمة 🗑️', 'success');
+        } else {
+            showNotification('حدث خطأ أثناء حذف المهمة ❌', 'error');
+        }
+    } catch (err) {
+        showNotification('فشل الاتصال بالخادم ❌', 'error');
+    }
+}
+
+        // عرض الإشعارات
+        function showNotification(message, type = 'info') {
+            // إنشاء عنصر الإشعار
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 25px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 1000;
+                font-weight: 500;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // إزالة الإشعار بعد 3 ثوان
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // أحداث أزرار التصفية
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                // إزالة الكلاس النشط من جميع الأزرار
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                
+                // إضافة الكلاس النشط للزر المختار
+                this.classList.add('active');
+                
+                // تحديث التصفية الحالية
+                currentFilter = this.dataset.filter;
+                
+                // عرض المهام المفلترة
                 displayTasks();
-                showNotification('تم حذف المهمة 🗑', 'warning');
-            }
+            });
+        });
 
-            // استرجاع المهمة من الأرشيف
-            function restoreTask(id) {
-                for (let day of archivedDays) {
-                    const idx = day.tasks.findIndex(t => t.id === id);
-                    if (idx !== -1) {
-                        const [task] = day.tasks.splice(idx, 1);
-                        task.completed = false;
-                        task.status = 'جديد';
-                        tasks.push(task);
-                        saveTasks();
-                        updateStats();
-                        displayTasks();
-                        displayArchivedDays();
-                        showNotification('تم استرجاع المهمة ↩', 'success');
-                        break;
-                    }
+        // إضافة الأنماط المتحركة
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(-50%) translateY(-20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(-50%) translateY(0);
+                    opacity: 1;
                 }
             }
-
-            // دالة إشعار بسيطة (تقدر تطورها لّـ toast أو snackbar)
-            function showNotification(msg, type) {
-                alert(msg);
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(-50%) translateY(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(-50%) translateY(-20px);
+                    opacity: 0;
+                }
             }
+        `;
+        document.head.appendChild(style);
 
-            // شغل تحميل المهام عند فتح الصفحة
-            document.addEventListener('DOMContentLoaded', loadTasks);
-        </script>
-     </body>
+        // تحديث تلقائي كل 30 ثانية
+        setInterval(loadTasks, 30000);
+
+        // تحميل المهام عند بدء التشغيل
+        window.addEventListener('load', loadTasks);
+    </script>
+</body>
 </html>
+
+
+
