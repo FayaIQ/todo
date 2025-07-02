@@ -67,8 +67,16 @@ app.get('/', (req, res) => {
 
 // ✅ عرض كل المهام
 app.get('/tasks.json', async (req, res) => {
+    const admin = req.query.admin;
     const data = await loadTasks();
-    res.json(data);
+    if (admin) {
+        res.json({
+            ...data,
+            tasks: data.tasks.filter(t => t.adminUsername === admin)
+        });
+    } else {
+        res.json(data);
+    }
 });
 
 // ✅ إكمال مهمة
@@ -198,20 +206,29 @@ bot.on('message', async (msg) => {
         return bot.sendMessage(chatId, '❌ يرجى اختيار حالة من القائمة.');
       }
 
+      state.data.status = selected;
+      state.step = 'admin';
+      bot.sendMessage(chatId, '👮‍♂️ اكتب يوزر الأدمن المسؤول (بدون @):');
+      break;
+
+    case 'admin':
+      state.data.adminUsername = msg.text.replace('@', '').trim();
+
       const data = await loadTasks();
       const newTask = {
         id: data.counter++,
         title: state.data.title,
         description: state.data.description,
         priority: state.data.priority,
-        status: selected,
-        completed: selected === 'مكتمل',
+        status: state.data.status,
+        completed: state.data.status === 'مكتمل',
         createdAt: new Date().toISOString(),
-        completedAt: selected === 'مكتمل' ? new Date().toISOString() : undefined,
+        completedAt: state.data.status === 'مكتمل' ? new Date().toISOString() : undefined,
         archived: false,
         archivedAt: null,
         userId: msg.from.id,
         username: msg.from.username || msg.from.first_name,
+        adminUsername: state.data.adminUsername,
         tags: []
       };
 
