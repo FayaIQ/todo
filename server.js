@@ -8,6 +8,8 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const TASKS_FILE = path.join(__dirname, 'tasks.json');
+const AUTO_ARCHIVE_HOURS = 12; // المدة قبل الأرشفة التلقائية
+const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 
 const TOKEN = '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs'; // ← غيّره بالتوكن الحقيقي
 const bot = new TelegramBot(TOKEN, { polling: true });
@@ -24,7 +26,12 @@ async function loadTasks() {
         return JSON.parse(data);
     } catch {
         console.log('⚠️ لا يوجد ملف مهام، يتم إنشاء ملف جديد...');
-        return { tasks: [], counter: 1, lastUpdated: new Date().toISOString() };
+        return {
+            tasks: [],
+            counter: 1,
+            lastUpdated: new Date().toISOString(),
+            lastFinished: new Date().toISOString()
+        };
     }
 }
 
@@ -37,6 +44,20 @@ async function saveTasks(data) {
         console.error('❌ خطأ في حفظ المهام:', error);
         return false;
     }
+}
+
+// ⏹️ أرشفة جميع المهام الحالية
+async function finishDay() {
+    const data = await loadTasks();
+    const now = new Date().toISOString();
+    data.tasks.forEach(task => {
+        if (!task.archived) {
+            task.archived = true;
+            task.archivedAt = now;
+        }
+    });
+    data.lastFinished = now;
+    await saveTasks(data);
 }
 
 // ✅ نقطة اختبار
@@ -81,6 +102,30 @@ app.post('/delete', async (req, res) => {
         res.status(404).json({ success: false, message: '❌ المهمة غير موجودة' });
     }
 });
+
+// ✅ إنهاء اليوم (أرشفة جميع المهام)
+app.post('/finish_day', async (req, res) => {
+    await finishDay();
+    res.json({ success: true });
+});
+
+// فحص أولي عند التشغيل
+(async () => {
+    const data = await loadTasks();
+    const last = new Date(data.lastFinished || data.lastUpdated);
+    if (Date.now() - last.getTime() > AUTO_ARCHIVE_HOURS * 60 * 60 * 1000) {
+        await finishDay();
+    }
+})();
+
+setInterval(async () => {
+    const data = await loadTasks();
+    const last = new Date(data.lastFinished || data.lastUpdated);
+    if (Date.now() - last.getTime() > AUTO_ARCHIVE_HOURS * 60 * 60 * 1000) {
+        await finishDay();
+        console.log('✅ تم إنهاء اليوم تلقائياً');
+    }
+}, CHECK_INTERVAL);
 
 // ✅ تشغيل السيرفر
 app.listen(PORT, () => {
@@ -162,6 +207,8 @@ bot.on('message', async (msg) => {
         completed: selected === 'مكتمل',
         createdAt: new Date().toISOString(),
         completedAt: selected === 'مكتمل' ? new Date().toISOString() : undefined,
+        archived: false,
+        archivedAt: null,
         userId: msg.from.id,
         username: msg.from.username || msg.from.first_name,
         tags: []
