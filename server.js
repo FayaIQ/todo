@@ -118,6 +118,7 @@ app.post('/finish_day', async (req, res) => {
     }
 })();
 
+// ⏰ أرشفة تلقائية بعد مضي المدة المحددة
 setInterval(async () => {
     const data = await loadTasks();
     const last = new Date(data.lastFinished || data.lastUpdated);
