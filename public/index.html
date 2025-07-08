@@ -478,7 +478,7 @@ body {
 
                 if (response.ok) {
                     const data = await response.json();
-                    tasks = (data.tasks || []).filter(t => t.adminusername === adminusername).map(t => ({ archived: t.archived || false, archivedAt: t.archivedAt || null, ...t }));
+                    tasks = (data.tasks || []).filter(t => t.adminusername === adminusername).map(t => ({ archived: t.archived || false, archivedat: t.archivedat || null, ...t }));
                     lastFinished = new Date(data.lastFinished || data.lastUpdated).getTime();
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
@@ -514,8 +514,8 @@ body {
                     status: "جديد",
                     completed: false,
                     archived: false,
-                    createdAt: new Date(Date.now() - 86400000).toISOString(),
-                    userId: 123456789,
+                    createdat: new Date(Date.now() - 86400000).toISOString(),
+                    userid: 123456789,
                     username: "ahmed_user",
                     adminusername: "admin1",
                     tags: []
@@ -528,9 +528,9 @@ body {
                     status: "مكتمل",
                     completed: true,
                     archived: false,
-                    createdAt: new Date(Date.now() - 172800000).toISOString(),
-                    completedAt: new Date(Date.now() - 86400000).toISOString(),
-                    userId: 123456789,
+                    createdat: new Date(Date.now() - 172800000).toISOString(),
+                    completedat: new Date(Date.now() - 86400000).toISOString(),
+                    userid: 123456789,
                     username: "sara_user",
                     adminusername: "admin1",
                     tags: []
@@ -543,8 +543,8 @@ body {
                     status: "جديد",
                     completed: false,
                     archived: false,
-                    createdAt: new Date(Date.now() - 259200000).toISOString(),
-                    userId: 987654321,
+                    createdat: new Date(Date.now() - 259200000).toISOString(),
+                    userid: 987654321,
                     username: "mohammed_user",
                     adminusername: "admin2",
                     tags: []
@@ -557,8 +557,8 @@ body {
                     status: "جديد",
                     completed: false,
                     archived: false,
-                    createdAt: new Date(Date.now() - 345600000).toISOString(),
-                    userId: 123456789,
+                    createdat: new Date(Date.now() - 345600000).toISOString(),
+                    userid: 123456789,
                     username: "ahmed_user",
                     adminusername: "admin1",
                     tags: []
@@ -571,10 +571,10 @@ body {
                     status: "مكتمل",
                     completed: true,
                     archived: true,
-                    archivedAt: new Date(Date.now() - 86400000).toISOString(),
-                    createdAt: new Date(Date.now() - 432000000).toISOString(),
-                    completedAt: new Date(Date.now() - 172800000).toISOString(),
-                    userId: 987654321,
+                    archivedat: new Date(Date.now() - 86400000).toISOString(),
+                    createdat: new Date(Date.now() - 432000000).toISOString(),
+                    completedat: new Date(Date.now() - 172800000).toISOString(),
+                    userid: 987654321,
                     username: "fatima_user",
                     adminusername: "admin2",
                     tags: []
@@ -587,10 +587,10 @@ body {
                     status: "مكتمل",
                     completed: true,
                     archived: true,
-                    archivedAt: new Date(Date.now() - 172800000).toISOString(),
-                    createdAt: new Date(Date.now() - 604800000).toISOString(),
-                    completedAt: new Date(Date.now() - 345600000).toISOString(),
-                    userId: 123456789,
+                    archivedat: new Date(Date.now() - 172800000).toISOString(),
+                    createdat: new Date(Date.now() - 604800000).toISOString(),
+                    completedat: new Date(Date.now() - 345600000).toISOString(),
+                    userid: 123456789,
                     username: "ahmed_user",
                     adminusername: "admin1",
                     tags: []
@@ -710,13 +710,13 @@ body {
                         
                         <div class="meta-item">
                             <span class="meta-icon">📅</span>
-                            <span>${formatDate(task.createdAt)}</span>
+                            <span>${formatDate(task.createdat)}</span>
                         </div>
                         
-                        ${task.completedAt ? `
+                        ${task.completedat ? `
                             <div class="meta-item">
                                 <span class="meta-icon">✅</span>
-                                <span>${formatDate(task.completedAt)}</span>
+                                <span>${formatDate(task.completedat)}</span>
                             </div>
                         ` : ''}
                     </div>
@@ -763,7 +763,7 @@ async function completeTask(taskId) {
     if (task) {
       task.completed = true;
       task.status = 'مكتمل';
-      task.completedAt = new Date().toISOString();
+      task.completedat = new Date().toISOString();
       updateStats();
       displayTasks();
       showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
@@ -837,8 +837,8 @@ async function completeTask(taskId) {
         function displayArchivedDays() {
             const groups = {};
             tasks.forEach(t => {
-                if (t.archived && t.archivedAt) {
-                    const day = t.archivedAt.split('T')[0];
+                if (t.archived && t.archivedat) {
+                    const day = t.archivedat.split('T')[0];
                     (groups[day] = groups[day] || []).push(t);
                 }
             });
