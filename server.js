@@ -105,7 +105,7 @@ app.get('/', (req, res) => {
 app.get('/tasks.json', async (req, res) => {
     const admin = req.query.admin;
     const data = await loadTasks();
-    const tasks = admin ? data.tasks.filter(t => t.adminUsername === admin) : data.tasks;
+    const tasks = admin ? data.tasks.filter(t => t.adminusername === admin) : data.tasks;
     res.json({ ...data, tasks });
 });
 
@@ -252,7 +252,7 @@ bot.on('message', async (msg) => {
       break;
 
     case 'admin':
-      state.data.adminUsername = msg.text.replace('@', '').trim();
+      state.data.adminusername = msg.text.replace('@', '').trim();
 
       const newTask = {
         title: state.data.title,
@@ -266,7 +266,7 @@ bot.on('message', async (msg) => {
         archivedAt: null,
         userId: msg.from.id,
         username: msg.from.username || msg.from.first_name,
-        adminUsername: state.data.adminUsername,
+        adminusername: state.data.adminusername,
         tags: []
       };
       await addTask(newTask);

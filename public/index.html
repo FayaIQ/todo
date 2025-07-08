@@ -461,11 +461,11 @@ body {
         let currentFilter = 'all';
         let lastFinished = null;
         let countdownInterval;
-        let adminUsername = localStorage.getItem('adminUsername');
+        let adminusername = localStorage.getItem('adminusername');
 
         // تحميل المهام من ملف JSON
         async function loadTasks() {
-            if (!adminUsername) return;
+            if (!adminusername) return;
             const loadingState = document.getElementById('loadingState');
             const tasksContainer = document.getElementById('tasksContainer');
             
@@ -474,15 +474,15 @@ body {
 
             try {
                 // محاولة قراءة ملف المهام
-                const response = await fetch('tasks.json?admin=' + encodeURIComponent(adminUsername));
+                const response = await fetch('tasks.json?admin=' + encodeURIComponent(adminusername));
 
                 if (response.ok) {
                     const data = await response.json();
-                    tasks = (data.tasks || []).filter(t => t.adminUsername === adminUsername).map(t => ({ archived: t.archived || false, archivedAt: t.archivedAt || null, ...t }));
+                    tasks = (data.tasks || []).filter(t => t.adminusername === adminusername).map(t => ({ archived: t.archived || false, archivedAt: t.archivedAt || null, ...t }));
                     lastFinished = new Date(data.lastFinished || data.lastUpdated).getTime();
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
-                    tasks = generateSampleTasks().filter(t => t.adminUsername === adminUsername);
+                    tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
                     lastFinished = Date.now();
                 }
 
@@ -492,7 +492,7 @@ body {
                 startCountdown();
             } catch (error) {
                 console.log('لم يتم العثور على ملف المهام، سيتم استخدام بيانات تجريبية');
-                tasks = generateSampleTasks().filter(t => t.adminUsername === adminUsername);
+                tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
                 lastFinished = Date.now();
                 updateStats();
                 displayTasks();
@@ -517,7 +517,7 @@ body {
                     createdAt: new Date(Date.now() - 86400000).toISOString(),
                     userId: 123456789,
                     username: "ahmed_user",
-                    adminUsername: "admin1",
+                    adminusername: "admin1",
                     tags: []
                 },
                 {
@@ -532,7 +532,7 @@ body {
                     completedAt: new Date(Date.now() - 86400000).toISOString(),
                     userId: 123456789,
                     username: "sara_user",
-                    adminUsername: "admin1",
+                    adminusername: "admin1",
                     tags: []
                 },
                 {
@@ -546,7 +546,7 @@ body {
                     createdAt: new Date(Date.now() - 259200000).toISOString(),
                     userId: 987654321,
                     username: "mohammed_user",
-                    adminUsername: "admin2",
+                    adminusername: "admin2",
                     tags: []
                 },
                 {
@@ -560,7 +560,7 @@ body {
                     createdAt: new Date(Date.now() - 345600000).toISOString(),
                     userId: 123456789,
                     username: "ahmed_user",
-                    adminUsername: "admin1",
+                    adminusername: "admin1",
                     tags: []
                 },
                 {
@@ -576,7 +576,7 @@ body {
                     completedAt: new Date(Date.now() - 172800000).toISOString(),
                     userId: 987654321,
                     username: "fatima_user",
-                    adminUsername: "admin2",
+                    adminusername: "admin2",
                     tags: []
                 },
                 {
@@ -592,7 +592,7 @@ body {
                     completedAt: new Date(Date.now() - 345600000).toISOString(),
                     userId: 123456789,
                     username: "ahmed_user",
-                    adminUsername: "admin1",
+                    adminusername: "admin1",
                     tags: []
                 }
             ];
@@ -941,15 +941,15 @@ async function completeTask(taskId) {
         document.getElementById('daysTabBtn').addEventListener('click', () => showTab('days'));
 
         function showLogin() {
-            document.getElementById('adminInput').value = adminUsername || '';
+            document.getElementById('adminInput').value = adminusername || '';
             document.getElementById('loginOverlay').style.display = 'flex';
         }
 
         function handleLogin() {
             const val = document.getElementById('adminInput').value.replace('@','').trim();
             if (!val) return;
-            localStorage.setItem('adminUsername', val);
-            adminUsername = val;
+            localStorage.setItem('adminusername', val);
+            adminusername = val;
             document.getElementById('loginOverlay').style.display = 'none';
             loadTasks();
         }
@@ -989,7 +989,7 @@ async function completeTask(taskId) {
         // تحميل المهام عند بدء التشغيل
         window.addEventListener('load', () => {
             showTab('tasks');
-            if (!adminUsername) {
+            if (!adminusername) {
                 showLogin();
             } else {
                 loadTasks();
