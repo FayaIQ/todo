@@ -11,9 +11,18 @@ const TASKS_FILE = path.join(__dirname, 'tasks.json');
 const AUTO_ARCHIVE_HOURS = 12; // المدة قبل الأرشفة التلقائية
 const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 
-const TOKEN = '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs'; // ← غيّره بالتوكن الحقيقي
+// نقرأ التوكن من متغير البيئة لزيادة الأمان
+const TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
+let BOT_USERNAME = process.env.BOT_USERNAME;
+
+// الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
+if (!BOT_USERNAME) {
+    bot.getMe().then(me => {
+        BOT_USERNAME = me.username;
+    });
+}
 
 app.use(cors());
 app.use(express.json());
@@ -157,6 +166,14 @@ bot.onText(/\/add/, (msg) => {
 // الردود التفاعلية حسب الخطوة
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
+
+  // استجابة عند مناداة البوت في المجموعات
+  if ((msg.chat.type === 'group' || msg.chat.type === 'supergroup') && BOT_USERNAME) {
+    if (msg.text && msg.text.includes(`@${BOT_USERNAME}`)) {
+      return bot.sendMessage(chatId, 'أنا هنا! ماذا تريد؟');
+    }
+  }
+
   const state = userStates[chatId];
   if (!state || msg.text.startsWith('/')) return;
 
