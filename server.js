@@ -17,12 +17,12 @@ const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
-let BOT_username = process.env.BOT_username;
+let BOT_USERNAME = process.env.BOT_USERNAME;
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
-if (!BOT_username) {
+if (!BOT_USERNAME) {
     bot.getMe().then(me => {
-        BOT_username = me.username;
+        BOT_USERNAME = me.username;
     });
 }
 
@@ -185,8 +185,8 @@ bot.on('message', async (msg) => {
   const userid = msg.from.id;
 
   // إذا تمت مناداة البوت داخل مجموعة نبدأ المحادثة في الخاص
-  if ((msg.chat.type === 'group' || msg.chat.type === 'supergroup') && BOT_username) {
-    if (msg.text && msg.text.includes(`@${BOT_username}`)) {
+  if ((msg.chat.type === 'group' || msg.chat.type === 'supergroup') && BOT_USERNAME) {
+    if (msg.text && msg.text.includes(`@${BOT_USERNAME}`)) {
       userStates[userid] = { step: 'title', data: {}, groupId: msg.chat.id };
       bot.sendMessage(userid, '📌 ما هو عنوان المهمة؟');
       bot.sendMessage(msg.chat.id, `🔔 سيتم متابعة إضافة المهمة في الخاص مع @${msg.from.username || msg.from.first_name}.`);
