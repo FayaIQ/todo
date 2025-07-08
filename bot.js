@@ -37,23 +37,34 @@ bot.onText(/\/start/, (msg) => {
 
 // /add (يبدأ محادثة تفاعلية)
 bot.onText(/\/add/, (msg) => {
-  const chatId = msg.chat.id;
-  userStates[chatId] = { step: 'title', data: {} };
-  bot.sendMessage(chatId, '📌 ما هو عنوان المهمة؟');
+  const userId = msg.from.id;
+  if (msg.chat.type === 'private') {
+    userStates[userId] = { step: 'title', data: {} };
+    return bot.sendMessage(userId, '📌 ما هو عنوان المهمة؟');
+  }
+  userStates[userId] = { step: 'title', data: {}, groupId: msg.chat.id };
+  bot.sendMessage(userId, '📌 ما هو عنوان المهمة؟');
+  bot.sendMessage(msg.chat.id, `🔔 سيتم متابعة إضافة المهمة في الخاص مع @${msg.from.username || msg.from.first_name}.`);
 });
 
 // الردود التفاعلية حسب الخطوة
 bot.on('message', async (msg) => {
-  const chatId = msg.chat.id;
+  const userId = msg.from.id;
 
-  // إذا أُشير إلى البوت داخل مجموعة نرد برسالة بسيطة
+  // إذا تمت مناداة البوت في مجموعة نبدأ المحادثة في الخاص
   if ((msg.chat.type === 'group' || msg.chat.type === 'supergroup') && BOT_USERNAME) {
     if (msg.text && msg.text.includes(`@${BOT_USERNAME}`)) {
-      return bot.sendMessage(chatId, 'أنا هنا! ماذا تريد؟');
+      userStates[userId] = { step: 'title', data: {}, groupId: msg.chat.id };
+      bot.sendMessage(userId, '📌 ما هو عنوان المهمة؟');
+      bot.sendMessage(msg.chat.id, `🔔 سيتم متابعة إضافة المهمة في الخاص مع @${msg.from.username || msg.from.first_name}.`);
+      return;
     }
+    return;
   }
 
-  const state = userStates[chatId];
+  if (msg.chat.type !== 'private') return;
+
+  const state = userStates[userId];
 
   // تجاهل أوامر أخرى
   if (!state || msg.text.startsWith('/')) return;
@@ -62,13 +73,13 @@ bot.on('message', async (msg) => {
     case 'title':
       state.data.title = msg.text;
       state.step = 'description';
-      bot.sendMessage(chatId, '📝 أضف وصف للمهمة (أو اكتب - إذا لا يوجد):');
+      bot.sendMessage(userId, '📝 أضف وصف للمهمة (أو اكتب - إذا لا يوجد):');
       break;
 
     case 'description':
       state.data.description = msg.text === '-' ? '' : msg.text;
       state.step = 'priority';
-      bot.sendMessage(chatId, '❗ اختر أولوية المهمة:', {
+      bot.sendMessage(userId, '❗ اختر أولوية المهمة:', {
         reply_markup: {
           keyboard: [['🔥 عالي'], ['📋 متوسط'], ['🧊 منخفض']],
           one_time_keyboard: true,
@@ -79,11 +90,11 @@ bot.on('message', async (msg) => {
 
     case 'priority':
       if (!['🔥 عالي', '📋 متوسط', '🧊 منخفض'].includes(msg.text)) {
-        return bot.sendMessage(chatId, '🚫 الرجاء اختيار أولوية من الخيارات.');
+        return bot.sendMessage(userId, '🚫 الرجاء اختيار أولوية من الخيارات.');
       }
       state.data.priority = msg.text.includes('عالي') ? 'عالي' : msg.text.includes('منخفض') ? 'منخفض' : 'متوسط';
       state.step = 'status';
-      bot.sendMessage(chatId, '📊 اختر حالة المهمة:', {
+      bot.sendMessage(userId, '📊 اختر حالة المهمة:', {
         reply_markup: {
           keyboard: [['🟠 جديد'], ['🟡 قيد الإنجاز'], ['✅ مكتمل']],
           one_time_keyboard: true,
@@ -101,7 +112,7 @@ bot.on('message', async (msg) => {
 
       const selected = statusOptions[msg.text];
       if (!selected) {
-        return bot.sendMessage(chatId, '❌ يرجى اختيار حالة من القائمة.');
+        return bot.sendMessage(userId, '❌ يرجى اختيار حالة من القائمة.');
       }
 
       // حفظ المهمة
@@ -126,11 +137,15 @@ bot.on('message', async (msg) => {
       data.lastUpdated = new Date().toISOString();
       await saveTasks(data);
 
-      bot.sendMessage(chatId, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
+      bot.sendMessage(userId, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
       });
 
-      delete userStates[chatId]; // ننهي المحادثة
+      if (state.groupId) {
+        bot.sendMessage(state.groupId, `✅ تمت إضافة مهمة جديدة بواسطة @${msg.from.username || msg.from.first_name}.`);
+      }
+
+      delete userStates[userId]; // ننهي المحادثة
       break;
   }
 });
