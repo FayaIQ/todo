@@ -12,7 +12,7 @@ const AUTO_ARCHIVE_HOURS = 12; // المدة قبل الأرشفة التلقا�
 const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
-const TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
+const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
 let BOT_USERNAME = process.env.BOT_USERNAME;
