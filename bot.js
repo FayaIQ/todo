@@ -133,7 +133,6 @@ bot.on('message', async (msg) => {
         tags: []
       };
       await addTask(newTask);
-
       bot.sendMessage(userId, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
       });
