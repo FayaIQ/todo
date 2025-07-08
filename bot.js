@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
-const TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
+const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
 const TASKS_FILE = path.join(__dirname, 'tasks.json');
 
 const bot = new TelegramBot(TOKEN, { polling: true });
