@@ -2,11 +2,20 @@ const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs').promises;
 const path = require('path');
 
-const TOKEN = '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs'; // ← غيّره بالتوكن الحقيقي
+// نقرأ التوكن من متغير البيئة لزيادة الأمان
+const TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN_HERE';
 const TASKS_FILE = path.join(__dirname, 'tasks.json');
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
+let BOT_USERNAME = process.env.BOT_USERNAME;
+
+// إذا لم يتم توفير اسم المستخدم نحاول الحصول عليه تلقائياً من تليجرام
+if (!BOT_USERNAME) {
+  bot.getMe().then(me => {
+    BOT_USERNAME = me.username;
+  });
+}
 
 async function loadTasks() {
   try {
@@ -36,6 +45,14 @@ bot.onText(/\/add/, (msg) => {
 // الردود التفاعلية حسب الخطوة
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
+
+  // إذا أُشير إلى البوت داخل مجموعة نرد برسالة بسيطة
+  if ((msg.chat.type === 'group' || msg.chat.type === 'supergroup') && BOT_USERNAME) {
+    if (msg.text && msg.text.includes(`@${BOT_USERNAME}`)) {
+      return bot.sendMessage(chatId, 'أنا هنا! ماذا تريد؟');
+    }
+  }
+
   const state = userStates[chatId];
 
   // تجاهل أوامر أخرى
