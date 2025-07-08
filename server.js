@@ -1,13 +1,15 @@
 
 const TelegramBot = require('node-telegram-bot-api');
-const fs = require('fs').promises;
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const TASKS_FILE = path.join(__dirname, 'tasks.json');
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const AUTO_ARCHIVE_HOURS = 12; // المدة قبل الأرشفة التلقائية
 const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 
@@ -28,45 +30,70 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// 🔁 تحميل المهام من الملف
+// 🔁 تحميل المهام من قاعدة البيانات
 async function loadTasks() {
-    try {
-        const data = await fs.readFile(TASKS_FILE, 'utf8');
-        return JSON.parse(data);
-    } catch {
-        console.log('⚠️ لا يوجد ملف مهام، يتم إنشاء ملف جديد...');
-        return {
-            tasks: [],
-            counter: 1,
-            lastUpdated: new Date().toISOString(),
-            lastFinished: new Date().toISOString()
-        };
+    const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .order('id', { ascending: true });
+    if (error) {
+        console.error('❌ خطأ في قراءة المهام:', error);
+        return { tasks: [], counter: 1, lastUpdated: null, lastFinished: null };
     }
+    let lastUpdated = null;
+    let lastFinished = null;
+    data.forEach(t => {
+        const updated = t.updatedAt || t.createdAt;
+        if (!lastUpdated || new Date(updated) > new Date(lastUpdated)) {
+            lastUpdated = updated;
+        }
+        if (t.archivedAt && (!lastFinished || new Date(t.archivedAt) > new Date(lastFinished))) {
+            lastFinished = t.archivedAt;
+        }
+    });
+    return { tasks: data, counter: data.length + 1, lastUpdated, lastFinished };
 }
 
-// 💾 حفظ المهام إلى الملف
-async function saveTasks(data) {
-    try {
-        await fs.writeFile(TASKS_FILE, JSON.stringify(data, null, 2), 'utf8');
-        return true;
-    } catch (error) {
-        console.error('❌ خطأ في حفظ المهام:', error);
-        return false;
+// 💾 إضافة مهمة جديدة
+async function addTask(task) {
+    const { data, error } = await supabase
+        .from('tasks')
+        .insert(task)
+        .select('*')
+        .single();
+    if (error) {
+        console.error('❌ خطأ في إضافة المهمة:', error);
+        return null;
     }
+    return data;
+}
+
+// تحديث مهمة عند الإكمال
+async function markComplete(id) {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+        .from('tasks')
+        .update({ completed: true, status: 'مكتمل', completedAt: now, updatedAt: now })
+        .eq('id', id)
+        .select('*');
+    if (error || !data.length) return null;
+    return data[0];
+}
+
+// حذف مهمة
+async function removeTask(id) {
+    const { error } = await supabase.from('tasks').delete().eq('id', id);
+    return !error;
 }
 
 // ⏹️ أرشفة جميع المهام الحالية
 async function finishDay() {
-    const data = await loadTasks();
     const now = new Date().toISOString();
-    data.tasks.forEach(task => {
-        if (!task.archived) {
-            task.archived = true;
-            task.archivedAt = now;
-        }
-    });
-    data.lastFinished = now;
-    await saveTasks(data);
+    const { error } = await supabase
+        .from('tasks')
+        .update({ archived: true, archivedAt: now, updatedAt: now })
+        .eq('archived', false);
+    if (error) console.error('❌ خطأ في إنهاء اليوم:', error);
 }
 
 // ✅ نقطة اختبار
@@ -78,27 +105,15 @@ app.get('/', (req, res) => {
 app.get('/tasks.json', async (req, res) => {
     const admin = req.query.admin;
     const data = await loadTasks();
-    if (admin) {
-        res.json({
-            ...data,
-            tasks: data.tasks.filter(t => t.adminUsername === admin)
-        });
-    } else {
-        res.json(data);
-    }
+    const tasks = admin ? data.tasks.filter(t => t.adminUsername === admin) : data.tasks;
+    res.json({ ...data, tasks });
 });
 
 // ✅ إكمال مهمة
 app.post('/complete', async (req, res) => {
     const { id } = req.body;
-    const data = await loadTasks();
-    const task = data.tasks.find(t => t.id === id);
+    const task = await markComplete(id);
     if (task) {
-        task.completed = true;
-        task.status = 'مكتمل';
-        task.completedAt = new Date().toISOString();
-        data.lastUpdated = new Date().toISOString();
-        await saveTasks(data);
         res.json({ success: true });
     } else {
         res.status(404).json({ success: false, message: '❌ المهمة غير موجودة' });
@@ -108,12 +123,8 @@ app.post('/complete', async (req, res) => {
 // ✅ حذف مهمة
 app.post('/delete', async (req, res) => {
     const { id } = req.body;
-    const data = await loadTasks();
-    const index = data.tasks.findIndex(t => t.id === id);
-    if (index !== -1) {
-        data.tasks.splice(index, 1);
-        data.lastUpdated = new Date().toISOString();
-        await saveTasks(data);
+    const success = await removeTask(id);
+    if (success) {
         res.json({ success: true });
     } else {
         res.status(404).json({ success: false, message: '❌ المهمة غير موجودة' });
@@ -243,16 +254,14 @@ bot.on('message', async (msg) => {
     case 'admin':
       state.data.adminUsername = msg.text.replace('@', '').trim();
 
-      const data = await loadTasks();
       const newTask = {
-        id: data.counter++,
         title: state.data.title,
         description: state.data.description,
         priority: state.data.priority,
         status: state.data.status,
         completed: state.data.status === 'مكتمل',
         createdAt: new Date().toISOString(),
-        completedAt: state.data.status === 'مكتمل' ? new Date().toISOString() : undefined,
+        completedAt: state.data.status === 'مكتمل' ? new Date().toISOString() : null,
         archived: false,
         archivedAt: null,
         userId: msg.from.id,
@@ -260,11 +269,7 @@ bot.on('message', async (msg) => {
         adminUsername: state.data.adminUsername,
         tags: []
       };
-
-      data.tasks.push(newTask);
-      data.lastUpdated = new Date().toISOString();
-      await saveTasks(data);
-
+      await addTask(newTask);
       bot.sendMessage(userId, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
       });

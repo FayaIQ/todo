@@ -1,10 +1,12 @@
 const TelegramBot = require('node-telegram-bot-api');
-const fs = require('fs').promises;
 const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
 const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
-const TASKS_FILE = path.join(__dirname, 'tasks.json');
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
@@ -17,17 +19,17 @@ if (!BOT_USERNAME) {
   });
 }
 
-async function loadTasks() {
-  try {
-    const data = await fs.readFile(TASKS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch {
-    return { tasks: [], counter: 1, lastUpdated: new Date().toISOString() };
+async function addTask(task) {
+  const { data, error } = await supabase
+    .from('tasks')
+    .insert(task)
+    .select('*')
+    .single();
+  if (error) {
+    console.error('❌ خطأ في إضافة المهمة:', error);
+    return null;
   }
-}
-
-async function saveTasks(data) {
-  await fs.writeFile(TASKS_FILE, JSON.stringify(data, null, 2), 'utf8');
+  return data;
 }
 
 // /start
@@ -116,27 +118,21 @@ bot.on('message', async (msg) => {
       }
 
       // حفظ المهمة
-      const data = await loadTasks();
       const newTask = {
-        id: data.counter++,
         title: state.data.title,
         description: state.data.description,
         priority: state.data.priority,
         status: selected,
         completed: selected === 'مكتمل',
         createdAt: new Date().toISOString(),
-        completedAt: selected === 'مكتمل' ? new Date().toISOString() : undefined,
+        completedAt: selected === 'مكتمل' ? new Date().toISOString() : null,
         archived: false,
         archivedAt: null,
         userId: msg.from.id,
         username: msg.from.username || msg.from.first_name,
         tags: []
       };
-
-      data.tasks.push(newTask);
-      data.lastUpdated = new Date().toISOString();
-      await saveTasks(data);
-
+      await addTask(newTask);
       bot.sendMessage(userId, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
       });
