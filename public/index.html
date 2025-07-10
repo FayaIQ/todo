@@ -221,11 +221,6 @@ body {
   color: #fff;
 }
 
-.countdown {
-  margin-inline-start: auto;
-  font-weight: 600;
-}
-
 .days-list {
   display: flex;
   flex-wrap: wrap;
@@ -430,7 +425,6 @@ body {
                     <button class="filter-btn" data-filter="completed">المكتملة</button>
                     <button class="filter-btn" data-filter="high">عالية الأولوية</button>
                 </div>
-                <div class="countdown" id="countdown">--:--:--</div>
                 <button class="refresh-btn" onclick="loadTasks()">
                     <span>🔄</span>
                     تحديث
@@ -459,8 +453,6 @@ body {
         // بيانات المهام
         let tasks = [];
         let currentFilter = 'all';
-        let lastFinished = null;
-        let countdownInterval;
         let adminusername = localStorage.getItem('adminusername');
 
         // تحميل المهام من ملف JSON
@@ -479,25 +471,20 @@ body {
                 if (response.ok) {
                     const data = await response.json();
                     tasks = (data.tasks || []).filter(t => t.adminusername === adminusername).map(t => ({ archived: t.archived || false, archivedAt: t.archivedAt || null, ...t }));
-                    lastFinished = new Date(data.lastFinished || data.lastUpdated).getTime();
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
                     tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
-                    lastFinished = Date.now();
                 }
 
                 updateStats();
                 displayTasks();
                 displayArchivedDays();
-                startCountdown();
             } catch (error) {
                 console.log('لم يتم العثور على ملف المهام، سيتم استخدام بيانات تجريبية');
                 tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
-                lastFinished = Date.now();
                 updateStats();
                 displayTasks();
                 displayArchivedDays();
-                startCountdown();
             } finally {
                 loadingState.style.display = 'none';
             }
@@ -641,31 +628,9 @@ body {
                 case 'high':
                     return tasks.filter(task => task.priority === 'عالي' && !task.completed && !task.archived);
                 default:
-                    return tasks.filter(task => !task.completed && !task.archived);
+                    return tasks.filter(task => !task.archived);
             }
         }
-        async function completeTask(taskId) {
-    try {
-        const response = await fetch('/complete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: taskId }),
-        });
-
-        if (response.ok) {
-            // حدث البيانات من جديد
-            await loadTasks();
-            showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
-        } else {
-            showNotification('حدث خطأ أثناء إكمال المهمة ❌', 'error');
-        }
-    } catch (err) {
-        showNotification('فشل الاتصال بالخادم ❌', 'error');
-    }
-}
-
 
         // إنشاء بطاقة المهمة
         function createTaskCard(task) {
@@ -748,32 +713,31 @@ body {
         }
 
         // إكمال مهمة
-       // دمج المنطقيتين: إرسال الطلب ثم تحديث المهام محليّاً
-async function completeTask(taskId) {
-  try {
-    const response = await fetch('/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: taskId }),
-    });
-    if (!response.ok) throw new Error('Fetch failed');
-    
-    // حدّث الحالة محليّاً بعد نجاح الطلب
-    const task = tasks.find(t => t.id === taskId);
-    if (task) {
-      task.completed = true;
-      task.status = 'مكتمل';
-      task.completedAt = new Date().toISOString();
-      updateStats();
-      displayTasks();
-      showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
-    }
-  } catch (err) {
-    showNotification('فشل إكمال المهمة ❌', 'error');
-  }
-}
+        async function completeTask(taskId) {
+            try {
+                const response = await fetch('/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: taskId }),
+                });
+                if (!response.ok) throw new Error('Fetch failed');
+                
+                // حدّث الحالة محليّاً بعد نجاح الطلب
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = true;
+                    task.status = 'مكتمل';
+                    task.completedAt = new Date().toISOString();
+                    updateStats();
+                    displayTasks();
+                    showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
+                }
+            } catch (err) {
+                showNotification('فشل إكمال المهمة ❌', 'error');
+            }
+        }
 
-        // إنهاء اليوم وأرشفة المهام
+        // إنهاء اليوم وأرشفة المهام (يدوياً فقط)
         async function finishDay() {
             if (!confirm('هل تريد إنهاء اليوم وأرشفة جميع المهام؟')) return;
             try {
@@ -789,49 +753,28 @@ async function completeTask(taskId) {
             }
         }
 
-
         // حذف مهمة
         async function deleteTask(taskId) {
-    if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) return;
+            if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) return;
 
-    try {
-        const response = await fetch('/delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ id: taskId }),
-        });
+            try {
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: taskId }),
+                });
 
-        if (response.ok) {
-            await loadTasks();
-            showNotification('تم حذف المهمة 🗑️', 'success');
-        } else {
-            showNotification('حدث خطأ أثناء حذف المهمة ❌', 'error');
-        }
-    } catch (err) {
-        showNotification('فشل الاتصال بالخادم ❌', 'error');
-    }
-}
-
-        function startCountdown() {
-            if (countdownInterval) clearInterval(countdownInterval);
-            updateCountdown();
-            countdownInterval = setInterval(updateCountdown, 1000);
-        }
-
-        function updateCountdown() {
-            const countdownEl = document.getElementById('countdown');
-            if (!lastFinished) { countdownEl.textContent = '--:--:--'; return; }
-            const end = lastFinished + 12 * 60 * 60 * 1000;
-            let diff = end - Date.now();
-            if (diff <= 0) { countdownEl.textContent = '00:00:00'; return; }
-            const h = Math.floor(diff / 3600000).toString().padStart(2,'0');
-            diff %= 3600000;
-            const m = Math.floor(diff / 60000).toString().padStart(2,'0');
-            diff %= 60000;
-            const s = Math.floor(diff / 1000).toString().padStart(2,'0');
-            countdownEl.textContent = `${h}:${m}:${s}`;
+                if (response.ok) {
+                    await loadTasks();
+                    showNotification('تم حذف المهمة 🗑️', 'success');
+                } else {
+                    showNotification('حدث خطأ أثناء حذف المهمة ❌', 'error');
+                }
+            } catch (err) {
+                showNotification('فشل الاتصال بالخادم ❌', 'error');
+            }
         }
 
         function displayArchivedDays() {
