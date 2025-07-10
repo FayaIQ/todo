@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vxskgruvkdppbrjrjzib.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4c2tncnV2a2RwcGJyanJqemliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5Njc4ODUsImV4cCI6MjA2NzU0Mzg4NX0.3MIlGwTuu32TOND5pN6HhwMDUiiIh70hp-G28d-u9a0';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const AUTO_ARCHIVE_HOURS = 24; // المدة قبل الأرشفة التلقائية
+const AUTO_ARCHIVE_HOURS = 3; // المدة قبل الأرشفة التلقائية
 const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
