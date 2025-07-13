@@ -10,8 +10,6 @@ const PORT = process.env.PORT || 3000;
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vxskgruvkdppbrjrjzib.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4c2tncnV2a2RwcGJyanJqemliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5Njc4ODUsImV4cCI6MjA2NzU0Mzg4NX0.3MIlGwTuu32TOND5pN6HhwMDUiiIh70hp-G28d-u9a0';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const AUTO_ARCHIVE_HOURS = 3; // المدة قبل الأرشفة التلقائية
-const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
 const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
@@ -86,14 +84,9 @@ async function removeTask(id) {
     return !error;
 }
 
-// ⏹️ أرشفة جميع المهام الحالية
+// ⏹️ تم تعطيل الأرشفة
 async function finishDay() {
-    const now = new Date().toISOString();
-    const { error } = await supabase
-        .from('tasks')
-        .update({ archived: true, archivedat: now, updatedat: now })
-        .eq('archived', false);
-    if (error) console.error('❌ خطأ في إنهاء اليوم:', error);
+    // الأرشفة معطلة حالياً
 }
 
 // ✅ نقطة اختبار
@@ -131,29 +124,13 @@ app.post('/delete', async (req, res) => {
     }
 });
 
-// ✅ إنهاء اليوم (أرشفة جميع المهام)
-app.post('/finish_day', async (req, res) => {
-    await finishDay();
-    res.json({ success: true });
+// ✅ إنهاء اليوم - الأرشفة معطلة حالياً
+app.post('/finish_day', (req, res) => {
+    res.json({ success: true, message: 'archiving disabled' });
 });
 
 // فحص أولي عند التشغيل
-(async () => {
-    const data = await loadTasks();
-    const last = new Date(data.lastFinished || data.lastUpdated);
-    if (Date.now() - last.getTime() > AUTO_ARCHIVE_HOURS * 60 * 60 * 1000) {
-        await finishDay();
-    }
-})();
-
-setInterval(async () => {
-    const data = await loadTasks();
-    const last = new Date(data.lastFinished || data.lastUpdated);
-    if (Date.now() - last.getTime() > AUTO_ARCHIVE_HOURS * 60 * 60 * 1000) {
-        await finishDay();
-        console.log('✅ تم إنهاء اليوم تلقائياً');
-    }
-}, CHECK_INTERVAL);
+// تم تعطيل الأرشفة التلقائية
 
 // ✅ تشغيل السيرفر
 app.listen(PORT, () => {
@@ -262,8 +239,6 @@ bot.on('message', async (msg) => {
         completed: state.data.status === 'مكتمل',
         createdat: new Date().toISOString(),
         completedat: state.data.status === 'مكتمل' ? new Date().toISOString() : null,
-        archived: false,
-        archivedat: null,
         userid: msg.from.id,
         username: msg.from.username || msg.from.first_name,
         adminusername: state.data.adminusername,
