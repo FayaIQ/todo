@@ -485,7 +485,6 @@ body {
                             archivedAt: t.archivedAt || t.archivedat,
                             deletedAt: t.deletedAt || t.deletedat,
                         }));
-                    tasks = (data.tasks || []).filter(t => t.adminusername === adminusername);
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
                     tasks = generateSampleTasks()
@@ -655,7 +654,6 @@ body {
             switch(currentFilter) {
                 case 'pending':
                     return tasks.filter(task => !task.completed && !task.deleted);
-                    return tasks.filter(task => !task.completed);
                 case 'completed':
                     return tasks.filter(task => task.completed);
                 case 'high':
