@@ -41,6 +41,7 @@ async function loadTasks() {
     let lastUpdated = null;
     let lastFinished = null;
     data.forEach(t => {
+        t.deleted = t.deleted || false;
         const updated = t.updatedat || t.createdat;
         if (!lastUpdated || new Date(updated) > new Date(lastUpdated)) {
             lastUpdated = updated;
@@ -80,8 +81,14 @@ async function markComplete(id) {
 
 // حذف مهمة
 async function removeTask(id) {
-    const { error } = await supabase.from('tasks').delete().eq('id', id);
-    return !error;
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+        .from('tasks')
+        .update({ deleted: true, deletedat: now, updatedat: now })
+        .eq('id', id)
+        .select('*');
+    if (error || !data.length) return null;
+    return data[0];
 }
 
 // ⏹️ تم تعطيل الأرشفة
@@ -116,8 +123,8 @@ app.post('/complete', async (req, res) => {
 // ✅ حذف مهمة
 app.post('/delete', async (req, res) => {
     const { id } = req.body;
-    const success = await removeTask(id);
-    if (success) {
+    const task = await removeTask(id);
+    if (task) {
         res.json({ success: true });
     } else {
         res.status(404).json({ success: false, message: '❌ المهمة غير موجودة' });
@@ -237,6 +244,8 @@ bot.on('message', async (msg) => {
         priority: state.data.priority,
         status: state.data.status,
         completed: state.data.status === 'مكتمل',
+        deleted: false,
+        deletedat: null,
         createdat: new Date().toISOString(),
         completedat: state.data.status === 'مكتمل' ? new Date().toISOString() : null,
         userid: msg.from.id,

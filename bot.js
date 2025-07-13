@@ -124,6 +124,8 @@ bot.on('message', async (msg) => {
         priority: state.data.priority,
         status: selected,
         completed: selected === 'مكتمل',
+        deleted: false,
+        deletedat: null,
         createdat: new Date().toISOString(),
         completedat: selected === 'مكتمل' ? new Date().toISOString() : null,
         userid: msg.from.id,
