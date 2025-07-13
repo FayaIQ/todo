@@ -254,6 +254,10 @@ body {
   box-shadow: 0 2px 8px var(--shadow-light);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.task-card.deleted {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
 
 .task-card:hover {
   transform: translateY(-3px);
@@ -309,6 +313,7 @@ body {
 
 .status-completed { background-color: #D1FAE5; color: #065F46; }
 .status-pending   { background-color: #FEF3C7; color: #92400E; }
+.status-deleted   { background-color: #E5E7EB; color: #6B7280; }
 
 .task-actions {
   margin-top: 20px;
@@ -423,13 +428,13 @@ body {
                     <button class="filter-btn active" data-filter="all">جميع المهام</button>
                     <button class="filter-btn" data-filter="pending">المعلقة</button>
                     <button class="filter-btn" data-filter="completed">المكتملة</button>
+                    <button class="filter-btn" data-filter="deleted">المحذوفة</button>
                     <button class="filter-btn" data-filter="high">عالية الأولوية</button>
                 </div>
                 <button class="refresh-btn" onclick="loadTasks()">
                     <span>🔄</span>
                     تحديث
                 </button>
-                <button class="finish-day-btn" onclick="finishDay()">إنهاء اليوم</button>
                 <button class="finish-day-btn" onclick="showLogin()">تغيير الرمز</button>
             </div>
 
@@ -470,7 +475,9 @@ body {
 
                 if (response.ok) {
                     const data = await response.json();
-                    tasks = (data.tasks || []).filter(t => t.adminusername === adminusername).map(t => ({ archived: t.archived || false, archivedAt: t.archivedAt || null, ...t }));
+                    tasks = (data.tasks || [])
+                        .filter(t => t.adminusername === adminusername)
+                        .map(t => ({ deleted: t.deleted || false, ...t }));
                 } else {
                     // إذا لم يوجد الملف، استخدم بيانات تجريبية
                     tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
@@ -481,7 +488,9 @@ body {
                 displayArchivedDays();
             } catch (error) {
                 console.log('لم يتم العثور على ملف المهام، سيتم استخدام بيانات تجريبية');
-                tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
+                tasks = generateSampleTasks()
+                    .filter(t => t.adminusername === adminusername)
+                    .map(t => ({ deleted: t.deleted || false, ...t }));
                 updateStats();
                 displayTasks();
                 displayArchivedDays();
@@ -500,6 +509,7 @@ body {
                     priority: "عالي",
                     status: "جديد",
                     completed: false,
+                    deleted: false,
                     archived: false,
                     createdAt: new Date(Date.now() - 86400000).toISOString(),
                     userId: 123456789,
@@ -514,6 +524,7 @@ body {
                     priority: "متوسط",
                     status: "مكتمل",
                     completed: true,
+                    deleted: false,
                     archived: false,
                     createdAt: new Date(Date.now() - 172800000).toISOString(),
                     completedAt: new Date(Date.now() - 86400000).toISOString(),
@@ -529,6 +540,7 @@ body {
                     priority: "عالي",
                     status: "جديد",
                     completed: false,
+                    deleted: false,
                     archived: false,
                     createdAt: new Date(Date.now() - 259200000).toISOString(),
                     userId: 987654321,
@@ -543,6 +555,7 @@ body {
                     priority: "منخفض",
                     status: "جديد",
                     completed: false,
+                    deleted: false,
                     archived: false,
                     createdAt: new Date(Date.now() - 345600000).toISOString(),
                     userId: 123456789,
@@ -557,6 +570,7 @@ body {
                     priority: "عالي",
                     status: "مكتمل",
                     completed: true,
+                    deleted: false,
                     archived: true,
                     archivedAt: new Date(Date.now() - 86400000).toISOString(),
                     createdAt: new Date(Date.now() - 432000000).toISOString(),
@@ -573,6 +587,7 @@ body {
                     priority: "متوسط",
                     status: "مكتمل",
                     completed: true,
+                    deleted: false,
                     archived: true,
                     archivedAt: new Date(Date.now() - 172800000).toISOString(),
                     createdAt: new Date(Date.now() - 604800000).toISOString(),
@@ -587,11 +602,11 @@ body {
 
         // تحديث الإحصائيات
         function updateStats() {
-            const active = tasks.filter(t => !t.archived);
-            const totalTasks = active.length;
-            const pendingTasks = active.filter(task => !task.completed).length;
-            const completedTasks = active.filter(task => task.completed).length;
-            const highPriorityTasks = active.filter(task => task.priority === 'عالي' && !task.completed).length;
+            const activeTasks = tasks.filter(t => !t.deleted);
+            const totalTasks = activeTasks.length;
+            const pendingTasks = activeTasks.filter(task => !task.completed).length;
+            const completedTasks = activeTasks.filter(task => task.completed).length;
+            const highPriorityTasks = activeTasks.filter(task => task.priority === 'عالي' && !task.completed).length;
 
             document.getElementById('totalTasks').textContent = totalTasks;
             document.getElementById('pendingTasks').textContent = pendingTasks;
@@ -622,21 +637,23 @@ body {
         function filterTasks() {
             switch(currentFilter) {
                 case 'pending':
-                    return tasks.filter(task => !task.completed && !task.archived);
+                    return tasks.filter(task => !task.completed && !task.deleted);
                 case 'completed':
-                    return tasks.filter(task => task.completed && !task.archived);
+                    return tasks.filter(task => task.completed && !task.deleted);
+                case 'deleted':
+                    return tasks.filter(task => task.deleted);
                 case 'high':
-                    return tasks.filter(task => task.priority === 'عالي' && !task.completed && !task.archived);
+                    return tasks.filter(task => task.priority === 'عالي' && !task.completed && !task.deleted);
                 default:
-                    return tasks.filter(task => !task.archived);
+                    return tasks.filter(task => !task.completed && !task.deleted);
             }
         }
 
         // إنشاء بطاقة المهمة
         function createTaskCard(task) {
             const priorityClass = `${task.priority === 'عالي' ? 'high' : task.priority === 'متوسط' ? 'medium' : 'low'}-priority`;
-            const statusClass = task.completed ? 'completed' : '';
-            const statusIcon = task.completed ? '✅' : '⏳';
+            const statusClass = task.deleted ? 'deleted' : (task.completed ? 'completed' : '');
+            const statusIcon = task.deleted ? '🗑️' : (task.completed ? '✅' : '⏳');
             const priorityIcon = {
                 'عالي': '🔥',
                 'متوسط': '📋',
@@ -663,7 +680,7 @@ body {
                         
                         <div class="meta-item">
                             <span class="meta-icon">📊</span>
-                            <span class="status-badge status-${task.completed ? 'completed' : 'pending'}">
+                            <span class="status-badge status-${task.deleted ? 'deleted' : (task.completed ? 'completed' : 'pending')}">
                                 ${task.status}
                             </span>
                         </div>
@@ -687,14 +704,16 @@ body {
                     </div>
                     
                     <div class="task-actions">
-                        ${!task.completed ? `
+                        ${!task.completed && !task.deleted ? `
                             <button class="action-btn complete-btn" onclick="completeTask(${task.id})">
                                 ✅ إكمال
                             </button>
                         ` : ''}
-                        <button class="action-btn delete-btn" onclick="deleteTask(${task.id})">
-                            🗑️ حذف
-                        </button>
+                        ${!task.deleted ? `
+                            <button class="action-btn delete-btn" onclick="deleteTask(${task.id})">
+                                🗑️ حذف
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
             `;
@@ -737,21 +756,6 @@ body {
             }
         }
 
-        // إنهاء اليوم وأرشفة المهام (يدوياً فقط)
-        async function finishDay() {
-            if (!confirm('هل تريد إنهاء اليوم وأرشفة جميع المهام؟')) return;
-            try {
-                const response = await fetch('/finish_day', { method: 'POST' });
-                if (response.ok) {
-                    await loadTasks();
-                    showNotification('تم إنهاء اليوم بنجاح ✅', 'success');
-                } else {
-                    showNotification('حدث خطأ أثناء إنهاء اليوم ❌', 'error');
-                }
-            } catch (err) {
-                showNotification('فشل الاتصال بالخادم ❌', 'error');
-            }
-        }
 
         // حذف مهمة
         async function deleteTask(taskId) {
@@ -767,7 +771,13 @@ body {
                 });
 
                 if (response.ok) {
-                    await loadTasks();
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.deleted = true;
+                        task.status = 'محذوفة';
+                    }
+                    updateStats();
+                    displayTasks();
                     showNotification('تم حذف المهمة 🗑️', 'success');
                 } else {
                     showNotification('حدث خطأ أثناء حذف المهمة ❌', 'error');
