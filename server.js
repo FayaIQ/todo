@@ -4,6 +4,8 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +18,29 @@ const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlw
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
 let BOT_USERNAME = process.env.BOT_USERNAME;
+
+const ADMIN_HASH = process.env.ADMIN_CODE_HASH || '1ffe1c525e5a599d8bf42285c492ca90bb2d83e13ab3bf42fe36387edf091f96';
+const PLATFORM_URL = process.env.PLATFORM_URL || 'http://localhost:3000';
+
+function verifyAdmin(code) {
+    const hash = crypto.createHash('sha256').update(code).digest('hex');
+    return hash === ADMIN_HASH;
+}
+
+function loadUsers() {
+    try {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8'));
+        return data.users || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveUsers(users) {
+    fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify({ users }, null, 2));
+}
+
+let users = loadUsers();
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
 if (!BOT_USERNAME) {
@@ -148,7 +173,11 @@ app.listen(PORT, () => {
 
 // /start
 bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`);
+  bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`).then(() => {
+    return bot.sendMessage(msg.chat.id, `رابط منصة المهام: ${PLATFORM_URL}`);
+  }).then(res => {
+    bot.pinChatMessage(msg.chat.id, res.message_id).catch(() => {});
+  });
 });
 
 // /add (يبدأ محادثة تفاعلية)
@@ -232,10 +261,29 @@ bot.on('message', async (msg) => {
 
       state.data.status = selected;
       state.step = 'admin';
-      bot.sendMessage(userid, 'لمن موجهة هذه المهمة ؟ (يجب كتب رمز الشخص الموجهة له المهمة)');
+      const options = users.map(u => [u]);
+      options.push(['➕ اضف شخص']);
+      bot.sendMessage(userid, 'لمن موجهة هذه المهمة؟ اختر من القائمة:', {
+        reply_markup: {
+          keyboard: options,
+          one_time_keyboard: true,
+          resize_keyboard: true
+        }
+      });
       break;
 
     case 'admin':
+      if (msg.text === '➕ اضف شخص') {
+        state.step = 'verifyAdmin';
+        bot.sendMessage(userid, '🔑 أدخل رمز الأدمن لإضافة موظف جديد:');
+        break;
+      }
+
+      if (!users.includes(msg.text)) {
+        bot.sendMessage(userid, '❌ الرجاء اختيار رمز من القائمة.');
+        break;
+      }
+
       state.data.adminusername = msg.text.replace('@', '').trim();
 
       const newTask = {
@@ -263,6 +311,37 @@ bot.on('message', async (msg) => {
       }
 
       delete userStates[userid];
+      break;
+
+    case 'verifyAdmin':
+      if (!verifyAdmin(msg.text)) {
+        bot.sendMessage(userid, '❌ رمز الأدمن غير صحيح.');
+        break;
+      }
+      state.step = 'addPerson';
+      bot.sendMessage(userid, '👤 أدخل يوزر الشخص الجديد:');
+      break;
+
+    case 'addPerson':
+      const newUser = msg.text.replace('@', '').trim();
+      if (!newUser) {
+        bot.sendMessage(userid, '❌ يوزر غير صالح.');
+        break;
+      }
+      if (!users.includes(newUser)) {
+        users.push(newUser);
+        saveUsers(users);
+      }
+      state.step = 'admin';
+      const opts = users.map(u => [u]);
+      opts.push(['➕ اضف شخص']);
+      bot.sendMessage(userid, `✅ تم إضافة ${newUser}. اختر من القائمة:`, {
+        reply_markup: {
+          keyboard: opts,
+          one_time_keyboard: true,
+          resize_keyboard: true
+        }
+      });
       break;
   }
 });
