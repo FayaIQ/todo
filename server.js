@@ -4,6 +4,7 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
 const crypto = require('crypto');
 
 const app = express();
@@ -25,7 +26,6 @@ function verifyAdmin(code) {
     const hash = crypto.createHash('sha256').update(code).digest('hex');
     return hash === ADMIN_HASH;
 }
-
 async function refreshUsers() {
     const { data, error } = await supabase
         .from('allowed_users')
@@ -60,6 +60,20 @@ async function upsertUser(username, telegramId) {
 let userRecords = [];
 let users = [];
 refreshUsers().then(u => { users = u; });
+function loadUsers() {
+    try {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8'));
+        return data.users || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveUsers(users) {
+    fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify({ users }, null, 2));
+}
+
+let users = loadUsers();
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
 if (!BOT_USERNAME) {
@@ -193,6 +207,7 @@ app.listen(PORT, () => {
 // /start
 bot.onText(/\/start/, async (msg) => {
   await upsertUser(msg.from.username || msg.from.first_name, msg.from.id);
+bot.onText(/\/start/, (msg) => {
   bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`).then(() => {
     return bot.sendMessage(msg.chat.id, `رابط منصة المهام: ${PLATFORM_URL}`);
   }).then(res => {
@@ -355,6 +370,8 @@ bot.on('message', async (msg) => {
       }
       if (!users.includes(newUser)) {
         users = await addUser(newUser);
+        users.push(newUser);
+        saveUsers(users);
       }
       state.step = 'admin';
       const opts = users.map(u => [u]);
