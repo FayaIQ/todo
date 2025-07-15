@@ -109,7 +109,6 @@ async function deliverPending(username, chatId) {
         savePending(pendingNotifications);
     }
 }
-
 let pendingNotifications = loadPending();
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
@@ -251,6 +250,14 @@ bot.onText(/\/start/, async (msg) => {
     bot.pinChatMessage(msg.chat.id, res.message_id).catch(() => {});
   });
   await deliverPending(username, msg.chat.id);
+
+  if (pendingNotifications[username] && pendingNotifications[username].length) {
+    for (const text of pendingNotifications[username]) {
+      await bot.sendMessage(msg.chat.id, text).catch(() => {});
+    }
+    delete pendingNotifications[username];
+    savePending(pendingNotifications);
+  }
 });
 
 // /add (يبدأ محادثة تفاعلية)
@@ -384,6 +391,7 @@ bot.on('message', async (msg) => {
         notifyText += `\n📝 ${newTask.description}`;
       }
       if (assigned && assigned.telegram_id) {
+
         try {
           await bot.sendMessage(assigned.telegram_id, notifyText);
         } catch (e) {
@@ -393,6 +401,12 @@ bot.on('message', async (msg) => {
       } else {
         queueNotification(state.data.adminusername, notifyText);
         bot.sendMessage(userid, '⚠️ المستخدم لم يفتح البوت بعد. سيتم إعلامه عند تشغيله للبوت.');
+        let notifyText = `📋 تم إضافة لك مهمة بواسطة @${msg.from.username || msg.from.first_name}`;
+        notifyText += `\nالمهمة هي: ${newTask.title}`;
+        if (newTask.description) {
+          notifyText += `\n📝 ${newTask.description}`;
+        }
+        bot.sendMessage(assigned.telegram_id, notifyText).catch(() => {});
       }
       bot.sendMessage(userid, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
