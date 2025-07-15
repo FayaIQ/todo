@@ -4,7 +4,6 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
-const fs = require('fs');
 const crypto = require('crypto');
 
 const app = express();
@@ -27,20 +26,40 @@ function verifyAdmin(code) {
     return hash === ADMIN_HASH;
 }
 
-function loadUsers() {
-    try {
-        const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8'));
-        return data.users || [];
-    } catch (e) {
+async function refreshUsers() {
+    const { data, error } = await supabase
+        .from('allowed_users')
+        .select('username, telegram_id');
+    if (error) {
+        console.error('خطأ في تحميل المستخدمين:', error);
         return [];
     }
+    userRecords = data || [];
+    return userRecords.map(u => u.username);
 }
 
-function saveUsers(users) {
-    fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify({ users }, null, 2));
+async function addUser(username) {
+    const { error } = await supabase
+        .from('allowed_users')
+        .insert({ username })
+        .select();
+    if (error && !error.message.includes('duplicate')) {
+        console.error('خطأ في إضافة المستخدم:', error);
+    }
+    return refreshUsers();
 }
 
-let users = loadUsers();
+async function upsertUser(username, telegramId) {
+    const { error } = await supabase
+        .from('allowed_users')
+        .upsert({ username, telegram_id: telegramId }, { onConflict: 'username' });
+    if (error) console.error('خطأ في تحديث المستخدم:', error);
+    return refreshUsers();
+}
+
+let userRecords = [];
+let users = [];
+refreshUsers().then(u => { users = u; });
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
 if (!BOT_USERNAME) {
@@ -172,7 +191,8 @@ app.listen(PORT, () => {
 // ====== Telegram Bot Logic ======
 
 // /start
-bot.onText(/\/start/, (msg) => {
+bot.onText(/\/start/, async (msg) => {
+  await upsertUser(msg.from.username || msg.from.first_name, msg.from.id);
   bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`).then(() => {
     return bot.sendMessage(msg.chat.id, `رابط منصة المهام: ${PLATFORM_URL}`);
   }).then(res => {
@@ -302,6 +322,11 @@ bot.on('message', async (msg) => {
         tags: []
       };
       await addTask(newTask);
+      const assigned = userRecords.find(u => u.username === state.data.adminusername);
+      if (assigned && assigned.telegram_id) {
+        bot.sendMessage(assigned.telegram_id, `📋 تم إسناد مهمة جديدة لك: ${newTask.title}`)
+          .catch(() => {});
+      }
       bot.sendMessage(userid, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
       });
@@ -329,8 +354,7 @@ bot.on('message', async (msg) => {
         break;
       }
       if (!users.includes(newUser)) {
-        users.push(newUser);
-        saveUsers(users);
+        users = await addUser(newUser);
       }
       state.step = 'admin';
       const opts = users.map(u => [u]);
