@@ -73,6 +73,28 @@ function saveUsers(users) {
     fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify({ users }, null, 2));
 }
 
+function loadPending() {
+    try {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'pending.json'), 'utf8'));
+        return data.pending || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function savePending(pending) {
+    fs.writeFileSync(path.join(__dirname, 'pending.json'), JSON.stringify({ pending }, null, 2));
+}
+
+function queueNotification(username, text) {
+    if (!username) return;
+    if (!pendingNotifications[username]) pendingNotifications[username] = [];
+    pendingNotifications[username].push(text);
+    savePending(pendingNotifications);
+}
+
+let pendingNotifications = loadPending();
+
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
 if (!BOT_USERNAME) {
     bot.getMe().then(me => {
@@ -204,12 +226,21 @@ app.listen(PORT, () => {
 
 // /start
 bot.onText(/\/start/, async (msg) => {
-  await upsertUser(msg.from.username || msg.from.first_name, msg.from.id);
+  const username = msg.from.username || msg.from.first_name;
+  await upsertUser(username, msg.from.id);
   bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`).then(() => {
     return bot.sendMessage(msg.chat.id, `رابط منصة المهام: ${PLATFORM_URL}`);
   }).then(res => {
     bot.pinChatMessage(msg.chat.id, res.message_id).catch(() => {});
   });
+
+  if (pendingNotifications[username] && pendingNotifications[username].length) {
+    for (const text of pendingNotifications[username]) {
+      await bot.sendMessage(msg.chat.id, text).catch(() => {});
+    }
+    delete pendingNotifications[username];
+    savePending(pendingNotifications);
+  }
 });
 
 // /add (يبدأ محادثة تفاعلية)
@@ -335,9 +366,21 @@ bot.on('message', async (msg) => {
       };
       await addTask(newTask);
       const assigned = userRecords.find(u => u.username === state.data.adminusername);
+      let notifyText = `📋 تم إضافة لك مهمة بواسطة @${msg.from.username || msg.from.first_name}`;
+      notifyText += `\nالمهمة هي: ${newTask.title}`;
+      if (newTask.description) {
+        notifyText += `\n📝 ${newTask.description}`;
+      }
       if (assigned && assigned.telegram_id) {
-        bot.sendMessage(assigned.telegram_id, `📋 تم إسناد مهمة جديدة لك: ${newTask.title}`)
-          .catch(() => {});
+        try {
+          await bot.sendMessage(assigned.telegram_id, notifyText);
+        } catch (e) {
+          queueNotification(state.data.adminusername, notifyText);
+          bot.sendMessage(userid, '⚠️ تعذر إرسال المهمة للمستخدم. سيتم إعلامه عند تشغيله للبوت.');
+        }
+      } else {
+        queueNotification(state.data.adminusername, notifyText);
+        bot.sendMessage(userid, '⚠️ المستخدم لم يفتح البوت بعد. سيتم إعلامه عند تشغيله للبوت.');
       }
       bot.sendMessage(userid, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
