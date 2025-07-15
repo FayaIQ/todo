@@ -336,8 +336,11 @@ bot.on('message', async (msg) => {
       await addTask(newTask);
       const assigned = userRecords.find(u => u.username === state.data.adminusername);
       if (assigned && assigned.telegram_id) {
-        bot.sendMessage(assigned.telegram_id, `📋 تم إسناد مهمة جديدة لك: ${newTask.title}`)
-          .catch(() => {});
+        let notifyText = `📋 تم إسناد مهمة جديدة لك بواسطة @${msg.from.username || msg.from.first_name}\nالمهمة: ${newTask.title}`;
+        if (newTask.description) {
+          notifyText += `\n📝 ${newTask.description}`;
+        }
+        bot.sendMessage(assigned.telegram_id, notifyText).catch(() => {});
       }
       bot.sendMessage(userid, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
