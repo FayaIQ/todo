@@ -93,6 +93,23 @@ function queueNotification(username, text) {
     savePending(pendingNotifications);
 }
 
+async function deliverPending(username, chatId) {
+    if (!username) return;
+    const pending = pendingNotifications[username];
+    if (pending && pending.length) {
+        for (const text of pending) {
+            try {
+                await bot.sendMessage(chatId, text);
+            } catch (e) {
+                console.error('Failed to deliver queued message:', e.message);
+                break;
+            }
+        }
+        delete pendingNotifications[username];
+        savePending(pendingNotifications);
+    }
+}
+
 let pendingNotifications = loadPending();
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
@@ -233,14 +250,7 @@ bot.onText(/\/start/, async (msg) => {
   }).then(res => {
     bot.pinChatMessage(msg.chat.id, res.message_id).catch(() => {});
   });
-
-  if (pendingNotifications[username] && pendingNotifications[username].length) {
-    for (const text of pendingNotifications[username]) {
-      await bot.sendMessage(msg.chat.id, text).catch(() => {});
-    }
-    delete pendingNotifications[username];
-    savePending(pendingNotifications);
-  }
+  await deliverPending(username, msg.chat.id);
 });
 
 // /add (يبدأ محادثة تفاعلية)
@@ -273,6 +283,8 @@ bot.on('message', async (msg) => {
 
   // نتعامل فقط مع الرسائل الخاصة هنا
   if (msg.chat.type !== 'private') return;
+
+  await deliverPending(msg.from.username || msg.from.first_name, msg.chat.id);
 
   const state = userStates[userid];
   if (!state || msg.text.startsWith('/')) return;
