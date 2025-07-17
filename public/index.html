@@ -8,18 +8,25 @@
     <link rel="icon" href="https://img.icons8.com/ios-filled/32/8a2be2/checklist.png" sizes="32x32" type="image/png">
     <link rel="icon" href="https://img.icons8.com/ios-filled/16/8a2be2/checklist.png" sizes="16x16" type="image/png">
     <style>
-       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Cairo:wght@400;600&display=swap');
 
 :root {
-  --font-family: 'Inter', sans-serif;
+  --font-family: 'Inter', 'Cairo', sans-serif;
   --bg-color: #F9F9F9;
   --surface-color: #FFFFFF;
   --text-primary: #333333;
   --text-secondary: #666666;
-  --accent-color: #A3BFD9; /* لمسة هادئة */
+  --accent-color: #8a2be2;
   --border-radius: 12px;
   --shadow-light: rgba(0, 0, 0, 0.05);
   --shadow-strong: rgba(0, 0, 0, 0.1);
+}
+
+body.dark {
+  --bg-color: #1a1a1a;
+  --surface-color: #262626;
+  --text-primary: #F4F4F4;
+  --text-secondary: #BBBBBB;
 }
 
 * {
@@ -34,6 +41,7 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   padding: 20px;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #loginOverlay {
@@ -81,6 +89,7 @@ body {
   border-radius: var(--border-radius);
   padding: 30px;
   box-shadow: 0 4px 12px var(--shadow-light), 0 2px 6px var(--shadow-strong);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .header {
@@ -378,6 +387,18 @@ body {
   color: var(--text-secondary);
 }
 
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  transition: color 0.3s ease;
+}
+.dark .theme-toggle {
+  color: var(--text-primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .stats { grid-template-columns: 1fr; }
@@ -398,6 +419,10 @@ body {
         </div>
     </div>
     <div class="container">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h1 style="font-size:1.6rem;font-weight:600;">قائمة المهام</h1>
+            <button id="themeToggle" class="theme-toggle" aria-label="تبديل الوضع">🌙</button>
+        </div>
         <div class="tabs">
             <button id="tasksTabBtn" class="tab-btn active">المهام</button>
             <button id="daysTabBtn" class="tab-btn">الأيام المنتهية</button>
@@ -459,6 +484,17 @@ body {
         let tasks = [];
         let currentFilter = 'all';
         let adminusername = localStorage.getItem('adminusername');
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            document.getElementById('themeToggle').textContent = '☀️';
+        }
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
 
         // تحميل المهام من ملف JSON
         async function loadTasks() {
