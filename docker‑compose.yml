@@ -2,15 +2,13 @@ version: '3.8'
 
 services:
   telegram-todo-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
     image: telegram-todo-bot:latest
     container_name: telegram-todo-bot
     restart: always
-    env_file:
-      - .env
-    environment:
-      - PORT=3000
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
+      - TELEGRAM_TOKEN=your_token_here
+      - NODE_ENV=production
+      # أضف كل المتغيرات هنا بدل .env
