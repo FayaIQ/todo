@@ -5,13 +5,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: yousifk/telegram-todo-bot:latest
+    image: telegram-todo-bot:latest
     container_name: telegram-todo-bot
     restart: always
     env_file:
       - .env
     environment:
-      # Fallbacks if not in .env
       - PORT=3000
     ports:
       - "3000:3000"
