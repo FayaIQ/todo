@@ -5,10 +5,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: telegram-todo-bot:latest
     container_name: telegram-todo-bot
     restart: always
-    environment:
-      - PORT=3000
     ports:
       - "3000:3000"
+    environment:
+      - PORT=3000
+      - TELEGRAM_TOKEN=your_token_here
