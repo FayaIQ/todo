@@ -7,8 +7,6 @@ services:
       dockerfile: Dockerfile
     container_name: telegram-todo-bot
     restart: always
-    ports:
-      - "3001:3001"
     environment:
-      - PORT=3001
+      - PORT=3000
       - TELEGRAM_TOKEN=your_token_here
