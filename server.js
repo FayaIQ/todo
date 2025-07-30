@@ -4,6 +4,8 @@ const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
+const fs = require('fs');
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +18,98 @@ const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlw
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
 let BOT_USERNAME = process.env.BOT_USERNAME;
+
+const ADMIN_HASH = process.env.ADMIN_CODE_HASH || '1ffe1c525e5a599d8bf42285c492ca90bb2d83e13ab3bf42fe36387edf091f96';
+const PLATFORM_URL = process.env.PLATFORM_URL || 'http://localhost:3000';
+
+function verifyAdmin(code) {
+    const hash = crypto.createHash('sha256').update(code).digest('hex');
+    return hash === ADMIN_HASH;
+}
+async function refreshUsers() {
+    const { data, error } = await supabase
+        .from('allowed_users')
+        .select('username, telegram_id');
+    if (error) {
+        console.error('خطأ في تحميل المستخدمين:', error);
+        return [];
+    }
+    userRecords = data || [];
+    return userRecords.map(u => u.username);
+}
+
+async function addUser(username) {
+    const { error } = await supabase
+        .from('allowed_users')
+        .insert({ username })
+        .select();
+    if (error && !error.message.includes('duplicate')) {
+        console.error('خطأ في إضافة المستخدم:', error);
+    }
+    return refreshUsers();
+}
+
+async function upsertUser(username, telegramId) {
+    const { error } = await supabase
+        .from('allowed_users')
+        .upsert({ username, telegram_id: telegramId }, { onConflict: 'username' });
+    if (error) console.error('خطأ في تحديث المستخدم:', error);
+    return refreshUsers();
+}
+
+let userRecords = [];
+let users = loadUsers();
+refreshUsers().then(u => { users = u; });
+function loadUsers() {
+    try {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'users.json'), 'utf8'));
+        return data.users || [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveUsers(users) {
+    fs.writeFileSync(path.join(__dirname, 'users.json'), JSON.stringify({ users }, null, 2));
+}
+
+function loadPending() {
+    try {
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, 'pending.json'), 'utf8'));
+        return data.pending || {};
+    } catch (e) {
+        return {};
+    }
+}
+
+function savePending(pending) {
+    fs.writeFileSync(path.join(__dirname, 'pending.json'), JSON.stringify({ pending }, null, 2));
+}
+
+function queueNotification(username, text) {
+    if (!username) return;
+    if (!pendingNotifications[username]) pendingNotifications[username] = [];
+    pendingNotifications[username].push(text);
+    savePending(pendingNotifications);
+}
+
+async function deliverPending(username, chatId) {
+    if (!username) return;
+    const pending = pendingNotifications[username];
+    if (pending && pending.length) {
+        for (const text of pending) {
+            try {
+                await bot.sendMessage(chatId, text);
+            } catch (e) {
+                console.error('Failed to deliver queued message:', e.message);
+                break;
+            }
+        }
+        delete pendingNotifications[username];
+        savePending(pendingNotifications);
+    }
+}
+let pendingNotifications = loadPending();
 
 // الحصول على اسم المستخدم تلقائياً إن لم يتم تحديده
 if (!BOT_USERNAME) {
@@ -147,8 +241,23 @@ app.listen(PORT, () => {
 // ====== Telegram Bot Logic ======
 
 // /start
-bot.onText(/\/start/, (msg) => {
-  bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`);
+bot.onText(/\/start/, async (msg) => {
+  const username = msg.from.username || msg.from.first_name;
+  await upsertUser(username, msg.from.id);
+  bot.sendMessage(msg.chat.id, `أهلاً ${msg.from.first_name} 🌟\nاستخدم /add لإضافة مهمة جديدة خطوة بخطوة ✍️`).then(() => {
+    return bot.sendMessage(msg.chat.id, `رابط منصة المهام: ${PLATFORM_URL}`);
+  }).then(res => {
+    bot.pinChatMessage(msg.chat.id, res.message_id).catch(() => {});
+  });
+  await deliverPending(username, msg.chat.id);
+
+  if (pendingNotifications[username] && pendingNotifications[username].length) {
+    for (const text of pendingNotifications[username]) {
+      await bot.sendMessage(msg.chat.id, text).catch(() => {});
+    }
+    delete pendingNotifications[username];
+    savePending(pendingNotifications);
+  }
 });
 
 // /add (يبدأ محادثة تفاعلية)
@@ -181,6 +290,8 @@ bot.on('message', async (msg) => {
 
   // نتعامل فقط مع الرسائل الخاصة هنا
   if (msg.chat.type !== 'private') return;
+
+  await deliverPending(msg.from.username || msg.from.first_name, msg.chat.id);
 
   const state = userStates[userid];
   if (!state || msg.text.startsWith('/')) return;
@@ -232,10 +343,29 @@ bot.on('message', async (msg) => {
 
       state.data.status = selected;
       state.step = 'admin';
-      bot.sendMessage(userid, 'لمن موجهة هذه المهمة ؟ (يجب كتب رمز الشخص الموجهة له المهمة)');
+      const options = users.map(u => [u]);
+      options.push(['➕ اضف شخص']);
+      bot.sendMessage(userid, 'لمن موجهة هذه المهمة؟ اختر من القائمة:', {
+        reply_markup: {
+          keyboard: options,
+          one_time_keyboard: true,
+          resize_keyboard: true
+        }
+      });
       break;
 
     case 'admin':
+      if (msg.text === '➕ اضف شخص') {
+        state.step = 'verifyAdmin';
+        bot.sendMessage(userid, '🔑 أدخل رمز الأدمن لإضافة موظف جديد:');
+        break;
+      }
+
+      if (!users.includes(msg.text)) {
+        bot.sendMessage(userid, '❌ الرجاء اختيار رمز من القائمة.');
+        break;
+      }
+
       state.data.adminusername = msg.text.replace('@', '').trim();
 
       const newTask = {
@@ -254,6 +384,30 @@ bot.on('message', async (msg) => {
         tags: []
       };
       await addTask(newTask);
+      const assigned = userRecords.find(u => u.username === state.data.adminusername);
+      let notifyText = `📋 تم إضافة لك مهمة بواسطة @${msg.from.username || msg.from.first_name}`;
+      notifyText += `\nالمهمة هي: ${newTask.title}`;
+      if (newTask.description) {
+        notifyText += `\n📝 ${newTask.description}`;
+      }
+      if (assigned && assigned.telegram_id) {
+
+        try {
+          await bot.sendMessage(assigned.telegram_id, notifyText);
+        } catch (e) {
+          queueNotification(state.data.adminusername, notifyText);
+          bot.sendMessage(userid, '⚠️ تعذر إرسال المهمة للمستخدم. سيتم إعلامه عند تشغيله للبوت.');
+        }
+      } else {
+        queueNotification(state.data.adminusername, notifyText);
+        bot.sendMessage(userid, '⚠️ المستخدم لم يفتح البوت بعد. سيتم إعلامه عند تشغيله للبوت.');
+        let notifyText = `📋 تم إضافة لك مهمة بواسطة @${msg.from.username || msg.from.first_name}`;
+        notifyText += `\nالمهمة هي: ${newTask.title}`;
+        if (newTask.description) {
+          notifyText += `\n📝 ${newTask.description}`;
+        }
+        bot.sendMessage(assigned.telegram_id, notifyText).catch(() => {});
+      }
       bot.sendMessage(userid, `✅ تمت إضافة المهمة:\n• ${newTask.title}\n📊 ${newTask.status} | ❗ ${newTask.priority}`, {
         reply_markup: { remove_keyboard: true }
       });
@@ -263,6 +417,38 @@ bot.on('message', async (msg) => {
       }
 
       delete userStates[userid];
+      break;
+
+    case 'verifyAdmin':
+      if (!verifyAdmin(msg.text)) {
+        bot.sendMessage(userid, '❌ رمز الأدمن غير صحيح.');
+        break;
+      }
+      state.step = 'addPerson';
+      bot.sendMessage(userid, '👤 أدخل يوزر الشخص الجديد:');
+      break;
+
+    case 'addPerson':
+      const newUser = msg.text.replace('@', '').trim();
+      if (!newUser) {
+        bot.sendMessage(userid, '❌ يوزر غير صالح.');
+        break;
+      }
+      if (!users.includes(newUser)) {
+        users = await addUser(newUser);
+        users.push(newUser);
+        saveUsers(users);
+      }
+      state.step = 'admin';
+      const opts = users.map(u => [u]);
+      opts.push(['➕ اضف شخص']);
+      bot.sendMessage(userid, `✅ تم إضافة ${newUser}. اختر من القائمة:`, {
+        reply_markup: {
+          keyboard: opts,
+          one_time_keyboard: true,
+          resize_keyboard: true
+        }
+      });
       break;
   }
 });

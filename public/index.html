@@ -385,42 +385,269 @@ body {
   .controls { flex-direction: column; }
 }
 
+=======
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+            --danger-gradient: linear-gradient(135deg, #fd79a8 0%, #e84393 100%);
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #2d3748;
+            --text-secondary: #718096;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
+            --shadow-glow: 0 0 20px rgba(102,126,234,0.3);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 20px;
+            --transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        .dark {
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --text-primary: #f7fafc;
+            --text-secondary: #cbd5e0;
+            --border-color: #4a5568;
+        }
+        body {
+            font-family: 'Cairo','Inter',sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height:100vh;
+            transition: var(--transition);
+            line-height:1.6;
+        }
+        /* Animated BG */
+        .animated-bg {
+            position:fixed; inset:0; z-index:-1;
+            background: linear-gradient(45deg,#667eea,#764ba2,#f093fb,#f5576c);
+            background-size:400% 400%; animation:gradientFlow 15s ease infinite; opacity:0.05;
+        }
+        @keyframes gradientFlow {
+            0%{background-position:0% 50%;}
+            50%{background-position:100% 50%;}
+            100%{background-position:0% 50%;}
+        }
+        .container { max-width:1400px; margin:0 auto; padding:2rem; }
+        /* Header */
+        .header {
+            background: var(--primary-gradient);
+            border-radius: var(--radius-xl);
+            padding:3rem 2rem;
+            margin-bottom:2rem;
+            text-align:center;
+            position:relative;
+            overflow:hidden;
+            box-shadow: var(--shadow-xl);
+        }
+        .header::before {
+            content:''; position:absolute; top:-50%; left:-50%;
+            width:200%; height:200%;
+            background:radial-gradient(circle,rgba(255,255,255,0.1) 0%,transparent 70%);
+            animation:pulse 4s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%,100%{transform:scale(1) rotate(0);}
+            50%{transform:scale(1.1) rotate(180deg);}
+        }
+        .header h1 {
+            font-size:3rem; font-weight:700; color:#fff;
+            margin-bottom:.5rem; text-shadow:0 2px 4px rgba(0,0,0,0.3);
+            position:relative; z-index:1;
+        }
+        .header p {
+            font-size:1.2rem; color:rgba(255,255,255,0.9);
+            position:relative; z-index:1;
+        }
+        /* Theme Toggle */
+        .theme-toggle {
+            position:fixed; top:2rem; right:2rem;
+            width:60px; height:30px; background:var(--primary-gradient);
+            border:none; border-radius:15px; cursor:pointer;
+            box-shadow:var(--shadow-lg); transition:var(--transition);
+            z-index:1000;
+        }
+        .theme-toggle::before {
+            content:'🌙'; position:absolute; top:2px; right:2px;
+            width:26px; height:26px; background:#fff; border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            transition:var(--transition); font-size:12px;
+        }
+        .dark .theme-toggle::before {
+            content:'☀️'; transform:translateX(-30px);
+        }
+        /* Stats Grid */
+        .stats-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+            gap:2rem; margin-bottom:2rem;
+        }
+        .stat-card {
+            background:var(--bg-secondary);
+            border-radius:var(--radius-xl);
+            padding:2rem;
+            box-shadow:var(--shadow-lg);
+            position:relative; overflow:hidden;
+            border:1px solid var(--border-color);
+            cursor:pointer;
+            transition:var(--transition);
+        }
+        .stat-card::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:4px;
+            background:var(--primary-gradient);
+            border-radius:var(--radius-xl) var(--radius-xl) 0 0;
+        }
+        .stat-card:hover { transform:translateY(-6px); }
+        .stat-card:nth-child(1)::before{background:var(--primary-gradient);}
+        .stat-card:nth-child(2)::before{background:var(--success-gradient);}
+        .stat-card:nth-child(3)::before{background:var(--warning-gradient);}
+        .stat-card:nth-child(4)::before{background:var(--danger-gradient);}
+        .stat-card.active-filter {
+            box-shadow: var(--shadow-xl), var(--shadow-glow);
+        }
+        .stat-number {
+            font-size:2.5rem; font-weight:700; color:var(--text-primary);
+            margin-bottom:.5rem;
+        }
+        .stat-label {
+            font-size:1rem; color:var(--text-secondary); font-weight:500;
+        }
+        /* Controls (only تحديث + تغيير رمز) */
+        .controls { margin-bottom:2rem; }
+        .controls-grid {
+            display:flex; justify-content:flex-end; gap:1rem;
+        }
+        .controls-grid .btn { white-space:nowrap; }
+        /* Task List */
+        .task-list {
+            background:var(--bg-secondary);
+            border-radius:var(--radius-xl);
+            padding:2rem; box-shadow:var(--shadow-lg);
+            border:1px solid var(--border-color);
+            margin-bottom:2rem;
+        }
+        .task-list h2 {
+            font-size:1.5rem; font-weight:600; color:var(--text-primary);
+            margin-bottom:1.5rem; display:flex; align-items:center; gap:.5rem;
+        }
+        .tasks-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(350px,1fr));
+            gap:1.5rem;
+        }
+        .task-item {
+            background:var(--bg-secondary);
+            border-radius:var(--radius-lg);
+            padding:1.5rem; box-shadow:var(--shadow-md);
+            border:1px solid var(--border-color);
+            position:relative; overflow:hidden;
+            transition:var(--transition);
+            animation:slideIn .3s ease-out;
+        }
+        .task-item::before {
+            content:''; position:absolute; top:0; left:0; right:0; height:3px;
+            background:var(--primary-gradient);
+            border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+        }
+        .task-item.completed::before { background: var(--success-gradient); }
+        .task-item.high-priority::before { background: var(--danger-gradient); }
+        .task-item:hover { transform:translateY(-4px); box-shadow:var(--shadow-xl); }
+        .task-item.completed { opacity:.8; }
+        .task-item.completed .task-title { text-decoration:line-through; }
+        .task-header {
+            display:flex; justify-content:space-between; align-items:flex-start;
+            margin-bottom:1rem;
+        }
+        .task-title {
+            font-size:1.125rem; font-weight:600; color:var(--text-primary);
+            margin-bottom:.5rem;
+        }
+        .task-id {
+            background:var(--accent-gradient); color:#fff;
+            padding:.25rem .75rem; border-radius:var(--radius-sm);
+            font-size:.75rem; font-weight:500; font-family:'Inter',monospace;
+        }
+        .task-description { color:var(--text-secondary); margin-bottom:1rem; }
+        .task-meta { display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:1rem; }
+        .meta-item { display:flex; align-items:center; gap:.25rem; font-size:.875rem; color:var(--text-secondary); }
+        .priority-badge, .status-badge {
+            padding:.25rem .75rem; border-radius:var(--radius-sm);
+            font-size:.75rem; font-weight:500; text-transform:uppercase; letter-spacing:.5px;
+        }
+        .priority-high { background:#fee2e2; color:#dc2626; }
+        .priority-medium { background:#fef3c7; color:#d97706; }
+        .priority-low { background:#dcfce7; color:#16a34a; }
+        .status-completed { background:#dcfce7; color:#16a34a; }
+        .status-pending { background:#fef3c7; color:#d97706; }
+        .task-actions { display:flex; gap:.5rem; margin-top:1rem; }
+        .task-actions .btn { flex:1; padding:.5rem 1rem; font-size:.875rem; }
+        /* Empty State */
+        .empty-state { text-align:center; padding:4rem 2rem; color:var(--text-secondary); }
+        .empty-state-icon {
+            width:80px; height:80px; margin:0 auto 1rem;
+            background:var(--accent-gradient); border-radius:50%;
+            display:flex; align-items:center; justify-content:center;
+            font-size:2rem; color:#fff; box-shadow:var(--shadow-lg);
+        }
+        .empty-state h3 { font-size:1.25rem; margin-bottom:.5rem; color:var(--text-primary); }
+        /* Loading */
+        .loading { display:flex; justify-content:center; align-items:center; height:200px; }
+        .loading-spinner {
+            width:40px; height:40px;
+            border:4px solid var(--border-color);
+            border-top:4px solid var(--text-primary);
+            border-radius:50%; animation:spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        /* Animations */
+        @keyframes slideIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+        @keyframes fadeIn  { from{opacity:0;} to{opacity:1;} }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width:8px; }
+        ::-webkit-scrollbar-track { background:var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background:var(--border-color); border-radius:4px; }
+        ::-webkit-scrollbar-thumb:hover { background:var(--text-secondary); }
+        /* Responsive */
+        @media (max-width:768px) {
+            .container { padding:1rem; }
+            .header { padding:2rem 1rem; }
+            .header h1 { font-size:2rem; }
+            .stats-grid { grid-template-columns:1fr; gap:1rem; }
+            .controls-grid { flex-direction:column; align-items:stretch; }
+            .tasks-grid { grid-template-columns:1fr; }
+            .theme-toggle { top:1rem; right:1rem; }
+        }
     </style>
 </head>
-
 <body>
-    <div id="loginOverlay" style="display:none;">
-        <div id="loginBox">
-            <h2>تغير الرمز</h2>
-            <input type="text" id="adminInput" placeholder="أدخل يوزر الأدمن">
-            <br>
-            <button id="loginBtn">دخول</button>
+    <div class="animated-bg"></div>
+    <!-- شاشة تغيير الرمز -->
+    <div id="loginOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
+        <div style="background:var(--bg-secondary); padding:2rem; border-radius:var(--radius-md); box-shadow:var(--shadow-lg);">
+            <h2 style="margin-bottom:1rem;">تغيير الرمز</h2>
+            <input id="adminInput" type="text" placeholder="أدخل يوزر الأدمن"
+                   style="width:100%; padding:.5rem; margin-bottom:1rem; border:1px solid var(--border-color); border-radius:var(--radius-sm);">
+            <button id="loginBtn" class="btn btn-primary" style="width:100%;">دخول</button>
         </div>
     </div>
+
     <div class="container">
-        <div class="tabs">
-            <button id="tasksTabBtn" class="tab-btn active">المهام</button>
-            <button id="daysTabBtn" class="tab-btn">الأيام المنتهية</button>
+        <!-- العنوان والتبديل -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h1 style="font-size:1.6rem; font-weight:600;">قائمة المهام</h1>
+            <button id="themeToggle" class="theme-toggle" aria-label="تبديل الوضع"></button>
         </div>
 
-        <div id="tasksTab">
-            <div class="stats" id="stats">
-                <div class="stat-card">
-                    <div class="number" id="totalTasks">0</div>
-                    <div class="label">إجمالي المهام</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="pendingTasks">0</div>
-                    <div class="label">مهام معلقة</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="completedTasks">0</div>
-                    <div class="label">مهام مكتملة</div>
-                </div>
-                <div class="stat-card">
-                    <div class="number" id="highPriorityTasks">0</div>
-                    <div class="label">مهام عالية الأولوية</div>
-                </div>
+        <!-- إحصائيات قابلة للنقر -->
+        <div id="stats" class="stats-grid">
+            <div class="stat-card" data-filter="all">
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">إجمالي المهام</div>
             </div>
 
             <div class="controls">
@@ -436,38 +663,72 @@ body {
                     تحديث
                 </button>
                 <button class="finish-day-btn" onclick="showLogin()">تغيير الرمز</button>
+            <div class="stat-card" data-filter="pending">
+                <div class="stat-number" id="pendingTasks">0</div>
+                <div class="stat-label">مهام معلقة</div>
             </div>
-
-            <div id="loadingState" class="loading" style="display: none;">
-                <div class="loading-spinner"></div>
-                <p>جاري تحميل المهام...</p>
+            <div class="stat-card" data-filter="completed">
+                <div class="stat-number" id="completedTasks">0</div>
+                <div class="stat-label">مهام مكتملة</div>
             </div>
-
-            <div class="tasks-container" id="tasksContainer">
-                <!-- المهام ستظهر هنا -->
+            <div class="stat-card" data-filter="high">
+                <div class="stat-number" id="highPriorityTasks">0</div>
+                <div class="stat-label">مهام عالية الأولوية</div>
             </div>
         </div>
 
+        <!-- أزرار تحديث وتغيير رمز فقط -->
+        <div class="controls">
+            <div class="controls-grid">
+                <button class="btn btn-primary" onclick="loadTasks()">🔄 تحديث</button>
+                <button class="btn btn-secondary" onclick="showLogin()">تغيير الرمز</button>
+            </div>
+        </div>
+
+        <!-- حالة التحميل -->
+        <div id="loadingState" class="loading" style="display:none;">
+            <div class="loading-spinner"></div>
+            <p>جاري تحميل المهام...</p>
+        </div>
+
+        <!-- قائمة المهام الحالية -->
+        <div id="tasksTab">
+            <div class="task-list">
+                <h2>📝 المهام الحالية</h2>
+                <div class="tasks-grid" id="tasksContainer"></div>
+            </div>
+        </div>
+
+        <!-- قائمة الأيام المؤرشفة -->
         <div id="daysTab" style="display:none;">
-            <div class="days-list" id="daysList"></div>
-            <div class="tasks-container" id="dayTasksContainer"></div>
+            <div class="days-list" id="daysList" style="margin-bottom:1rem;"></div>
+            <div class="task-list">
+                <h2>🗓️ المهام المؤرشفة</h2>
+                <div class="tasks-grid" id="dayTasksContainer"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // بيانات المهام
         let tasks = [];
         let currentFilter = 'all';
         let adminusername = localStorage.getItem('adminusername');
+        // إعادة تفعيل الوضع المحفوظ
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') document.body.classList.add('dark');
 
-        // تحميل المهام من ملف JSON
+        // تفعيل/إيقاف الوضع الداكن
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+
+        // تحميل المهام
         async function loadTasks() {
             if (!adminusername) return;
-            const loadingState = document.getElementById('loadingState');
-            const tasksContainer = document.getElementById('tasksContainer');
-            
-            loadingState.style.display = 'block';
-            tasksContainer.innerHTML = '';
+            document.getElementById('loadingState').style.display = 'flex';
+            document.getElementById('tasksContainer').innerHTML = '';
 
             try {
                 // محاولة قراءة ملف المهام
@@ -478,9 +739,28 @@ body {
                     tasks = (data.tasks || [])
                         .filter(t => t.adminusername === adminusername)
                         .map(t => ({ deleted: t.deleted || false, ...t }));
+                const res = await fetch('tasks.json?admin=' + encodeURIComponent(adminusername));
+                if (res.ok) {
+                    const data = await res.json();
+                    tasks = (data.tasks || [])
+                        .filter(t => t.adminusername === adminusername)
+                        .map(t => ({
+                            ...t,
+                            deleted: t.deleted||false,
+                            createdAt: t.createdAt||t.createdat,
+                            completedAt: t.completedAt||t.completedat,
+                            archivedAt: t.archivedAt||t.archivedat
+                        }));
                 } else {
-                    // إذا لم يوجد الملف، استخدم بيانات تجريبية
-                    tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
+                    tasks = generateSampleTasks()
+                        .filter(t => t.adminusername === adminusername)
+                        .map(t => ({
+                            ...t,
+                            deleted: t.deleted||false,
+                            createdAt: t.createdAt||t.createdat,
+                            completedAt: t.completedAt||t.completedat,
+                            archivedAt: t.archivedAt||t.archivedat
+                        }));
                 }
 
                 updateStats();
@@ -491,15 +771,18 @@ body {
                 tasks = generateSampleTasks()
                     .filter(t => t.adminusername === adminusername)
                     .map(t => ({ deleted: t.deleted || false, ...t }));
+            } catch (e) {
+                console.log('استخدام بيانات تجريبية');
+                tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
+            } finally {
                 updateStats();
                 displayTasks();
                 displayArchivedDays();
-            } finally {
-                loadingState.style.display = 'none';
+                document.getElementById('loadingState').style.display = 'none';
             }
         }
 
-        // إنشاء بيانات تجريبية للعرض
+        // بيانات تجريبية
         function generateSampleTasks() {
             return [
                 {
@@ -597,36 +880,55 @@ body {
                     adminusername: "admin1",
                     tags: []
                 }
+                { id:1, title:"تحضير التقرير الشهري", description:"...", priority:"عالي", status:"جديد", completed:false, deleted:false, archived:false, createdAt:new Date(Date.now()-86400000).toISOString(), username:"ahmed_user", adminusername:"admin1" },
+                { id:2, title:"شراء البقالة", description:"...", priority:"متوسط", status:"مكتمل", completed:true, deleted:false, archived:false, createdAt:new Date(Date.now()-172800000).toISOString(), completedAt:new Date(Date.now()-86400000).toISOString(), username:"sara_user", adminusername:"admin1" },
+                { id:3, title:"حجز موعد الطبيب", description:"...", priority:"عالي", status:"جديد", completed:false, deleted:false, archived:false, createdAt:new Date(Date.now()-259200000).toISOString(), username:"mohammed_user", adminusername:"admin2" },
+                { id:4, title:"تنظيف السيارة", description:"", priority:"منخفض", status:"جديد", completed:false, deleted:false, archived:false, createdAt:new Date(Date.now()-345600000).toISOString(), username:"ahmed_user", adminusername:"admin1" },
+                { id:5, title:"دفع فواتير الكهرباء", description:"...", priority:"عالي", status:"مكتمل", completed:true, deleted:false, archived:true, archivedAt:new Date(Date.now()-86400000).toISOString(), createdAt:new Date(Date.now()-432000000).toISOString(), completedAt:new Date(Date.now()-172800000).toISOString(), username:"fatima_user", adminusername:"admin2" }
             ];
         }
 
-        // تحديث الإحصائيات
+        // تحديث الأرقام في البطاقات
         function updateStats() {
             const activeTasks = tasks.filter(t => !t.deleted);
             const totalTasks = activeTasks.length;
             const pendingTasks = activeTasks.filter(task => !task.completed).length;
             const completedTasks = activeTasks.filter(task => task.completed).length;
             const highPriorityTasks = activeTasks.filter(task => task.priority === 'عالي' && !task.completed).length;
-
-            document.getElementById('totalTasks').textContent = totalTasks;
-            document.getElementById('pendingTasks').textContent = pendingTasks;
-            document.getElementById('completedTasks').textContent = completedTasks;
-            document.getElementById('highPriorityTasks').textContent = highPriorityTasks;
+            const active = tasks.filter(t => !t.archived);
+            document.getElementById('totalTasks').textContent = active.length;
+            document.getElementById('pendingTasks').textContent = active.filter(t => !t.completed).length;
+            document.getElementById('completedTasks').textContent = active.filter(t => t.completed).length;
+            document.getElementById('highPriorityTasks').textContent = active.filter(t => t.priority==='عالي' && !t.completed).length;
         }
 
-        // عرض المهام
-        function displayTasks() {
-            const container = document.getElementById('tasksContainer');
-            let filteredTasks = filterTasks();
+        // إبراز البطاقة النشطة
+        function highlightStatCard() {
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+            const sel = `.stat-card[data-filter="${currentFilter}"]`;
+            const active = document.querySelector(sel);
+            if (active) active.classList.add('active-filter');
+        }
 
-            if (filteredTasks.length === 0) {
+        // عرض المهام حسب الفلتر
+        function displayTasks() {
+            highlightStatCard();
+            const container = document.getElementById('tasksContainer');
+            const filtered = (() => {
+                switch(currentFilter) {
+                    case 'pending':   return tasks.filter(t => !t.completed && !t.deleted && !t.archived);
+                    case 'completed': return tasks.filter(t => t.completed && !t.deleted && !t.archived);
+                    case 'high':      return tasks.filter(t => t.priority==='عالي' && !t.completed && !t.archived);
+                    default:          return tasks.filter(t => !t.archived);
+                }
+            })();
+            if (!filtered.length) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">📝</div>
                         <h3>لا توجد مهام</h3>
                         <p>استخدم البوت لإضافة مهام جديدة!</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
@@ -659,15 +961,21 @@ body {
                 'متوسط': '📋',
                 'منخفض': '📝'
             }[task.priority] || '📋';
+            container.innerHTML = filtered.map(createTaskCard).join('');
+        }
 
+        // بناء بطاقة مهمة
+        function createTaskCard(t) {
+            const pc = t.priority==='عالي'?'high-priority':t.priority==='متوسط'?'medium-priority':'low-priority';
+            const sc = t.deleted?'deleted':t.completed?'completed':'';
+            const si = t.deleted?'🗑️':t.completed?'✅':'⏳';
+            const pi = {'عالي':'🔥','متوسط':'📋','منخفض':'📝'}[t.priority]||'📋';
             return `
-                <div class="task-card ${priorityClass} ${statusClass}">
-                    <div class="task-header">
-                        <div>
-                            <div class="task-title">${statusIcon} ${task.title}</div>
-                            ${task.description ? `<div class="task-description">${task.description}</div>` : ''}
-                        </div>
-                        <div class="task-id">#${task.id}</div>
+            <div class="task-item ${pc} ${sc}">
+                <div class="task-header">
+                    <div>
+                        <div class="task-title">${si} ${t.title}</div>
+                        ${t.description?`<div class="task-description">${t.description}</div>`:''}
                     </div>
                     
                     <div class="task-meta">
@@ -714,25 +1022,43 @@ body {
                                 🗑️ حذف
                             </button>
                         ` : ''}
-                    </div>
+                    <div class="task-id">#${t.id}</div>
                 </div>
-            `;
+                <div class="task-meta">
+                    <div class="meta-item">
+                        <span>${pi}</span>
+                        <span class="priority-badge priority-${t.priority==='عالي'?'high':t.priority==='متوسط'?'medium':'low'}">${t.priority}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span>📊</span>
+                        <span class="status-badge status-${t.deleted?'deleted':t.completed?'completed':'pending'}">${t.status}</span>
+                    </div>
+                    <div class="meta-item"><span>👤</span><span>@${t.username}</span></div>
+                    <div class="meta-item"><span>📅</span><span>${formatDate(t.createdAt)}</span></div>
+                    ${t.completedAt?`<div class="meta-item"><span>✅</span><span>${formatDate(t.completedAt)}</span></div>`:''}
+                </div>
+                <div class="task-actions">
+                    ${!t.completed&&!t.deleted?`<button class="btn btn-success" onclick="completeTask(${t.id})">✅ إكمال</button>`:''}
+                    ${!t.deleted?`<button class="btn btn-danger" onclick="deleteTask(${t.id})">🗑️ حذف</button>`:''}
+                </div>
+            </div>`;
         }
 
         // تنسيق التاريخ
-        function formatDate(dateString) {
-            const d = new Date(dateString);
-            const y = d.getFullYear();
-            const m = d.getMonth() + 1;
-            const day = d.getDate();
-            let h = d.getHours();
-            const ampm = h >= 12 ? 'pm' : 'am';
-            h = h % 12 || 12;
-            return `${y}/${m}/${day} ${h}${ampm}`;
+        function formatDate(s) {
+            if(!s) return '';
+            const d=new Date(s);
+            if(isNaN(d)) return '';
+            let y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'),
+                day=String(d.getDate()).padStart(2,'0'),
+                h=d.getHours(), ap=h>=12?'pm':'am';
+            h=h%12||12; h=String(h).padStart(2,'0');
+            const min=String(d.getMinutes()).padStart(2,'0');
+            return `${y}/${m}/${day} ${h}:${min}${ap}`;
         }
 
         // إكمال مهمة
-        async function completeTask(taskId) {
+        async function completeTask(id) {
             try {
                 const response = await fetch('/complete', {
                     method: 'POST',
@@ -755,12 +1081,18 @@ body {
                 showNotification('فشل إكمال المهمة ❌', 'error');
             }
         }
-
-
+                const res = await fetch('/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+                if(!res.ok) throw '';
+                const t = tasks.find(x=>x.id===id);
+                if(t){ t.completed=true; t.status='مكتمل'; t.completedAt=new Date().toISOString(); }
+                updateStats(); displayTasks(); showNotification('تم إكمال المهمة بنجاح! ✅','success');
+            } catch {
+                showNotification('فشل إكمال المهمة ❌','error');
+            }
+        }
         // حذف مهمة
-        async function deleteTask(taskId) {
-            if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) return;
-
+        async function deleteTask(id) {
+            if(!confirm('هل أنت متأكد؟')) return;
             try {
                 const response = await fetch('/delete', {
                     method: 'POST',
@@ -784,173 +1116,95 @@ body {
                 }
             } catch (err) {
                 showNotification('فشل الاتصال بالخادم ❌', 'error');
+                const res=await fetch('/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
+                if(!res.ok) throw '';
+                const t=tasks.find(x=>x.id===id);
+                if(t){ t.deleted=true; t.status='محذوفة'; }
+                updateStats(); displayTasks(); showNotification('تم حذف المهمة 🗑️','success');
+            } catch {
+                showNotification('فشل الاتصال ❌','error');
             }
         }
 
+        // عرض الأيام المؤرشفة
         function displayArchivedDays() {
-            const groups = {};
-            tasks.forEach(t => {
-                if (t.archived && t.archivedAt) {
-                    const day = t.archivedAt.split('T')[0];
-                    (groups[day] = groups[day] || []).push(t);
+            const groups={};
+            tasks.forEach(t=>{
+                if(t.archived && t.archivedAt) {
+                    const day=t.archivedAt.split('T')[0];
+                    (groups[day]=groups[day]||[]).push(t);
                 }
             });
-
-            const days = Object.keys(groups).sort().reverse();
-            const list = document.getElementById('daysList');
-            list.innerHTML = days.map(d => `<button class="day-btn" data-day="${d}">${d}</button>`).join('');
-
-            list.querySelectorAll('.day-btn').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    list.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+            const days=Object.keys(groups).sort().reverse();
+            const list=document.getElementById('daysList');
+            list.innerHTML = days.map(d=>`<button class="btn btn-secondary" data-day="${d}">${d}</button>`).join('');
+            list.querySelectorAll('button').forEach(btn=>{
+                btn.addEventListener('click',()=>{
+                    list.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
                     btn.classList.add('active');
-                    showDayTasks(groups[btn.dataset.day] || [], btn.dataset.day);
+                    showDayTasks(groups[btn.dataset.day], btn.dataset.day);
                 });
             });
-
-            if (days.length > 0) {
-                const first = list.querySelector('.day-btn');
+            if(days.length) {
+                const first=list.querySelector('button');
                 first.classList.add('active');
                 showDayTasks(groups[days[0]], days[0]);
             } else {
                 document.getElementById('dayTasksContainer').innerHTML = '<p class="empty-state">لا توجد أيام منتهية</p>';
             }
         }
-
-        function showDayTasks(dayTasks, day) {
-            const container = document.getElementById('dayTasksContainer');
-            if (dayTasks.length === 0) {
-                container.innerHTML = '<p class="empty-state">لا توجد مهام لهذا اليوم</p>';
+        function showDayTasks(arr, day) {
+            const c = document.getElementById('dayTasksContainer');
+            if(!arr.length) {
+                c.innerHTML = '<p class="empty-state">لا توجد مهام لهذا اليوم</p>';
             } else {
-                container.innerHTML = `<h3>مهام ${day}</h3>` + dayTasks.map(createTaskCard).join('');
+                c.innerHTML = `<h3 style="margin-bottom:1rem;">مهام ${day}</h3>` + arr.map(createTaskCard).join('');
             }
         }
 
-        // عرض الإشعارات
-        function showNotification(message, type = 'info') {
-            // إنشاء عنصر الإشعار
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-                color: white;
-                padding: 15px 25px;
-                border-radius: 25px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                z-index: 1000;
-                font-weight: 500;
-                animation: slideIn 0.3s ease;
-            `;
-            
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            // إزالة الإشعار بعد 3 ثوان
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
+        // إشعارات علوية
+        function showNotification(msg, type='info') {
+            const n=document.createElement('div');
+            n.style.cssText=`
+                position:fixed; top:20px; left:50%; transform:translateX(-50%);
+                background:${type==='success'?'#4CAF50':'#f44336'}; color:#fff;
+                padding:15px 25px; border-radius:25px; box-shadow:0 5px 15px rgba(0,0,0,0.3);
+                z-index:1000; font-weight:500; animation:slideIn .3s ease;`;
+            n.textContent = msg; document.body.appendChild(n);
+            setTimeout(()=>{
+                n.style.animation='slideOut .3s ease';
+                setTimeout(()=>n.remove(),300);
+            },3000);
         }
 
-        // أحداث أزرار التصفية
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                // إزالة الكلاس النشط من جميع الأزرار
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                
-                // إضافة الكلاس النشط للزر المختار
-                this.classList.add('active');
-                
-                // تحديث التصفية الحالية
-                currentFilter = this.dataset.filter;
-                
-                // عرض المهام المفلترة
+        // تفعيل النقر على البطاقات
+        document.querySelectorAll('.stat-card').forEach(card=>{
+            card.addEventListener('click',()=>{
+                currentFilter = card.dataset.filter;
                 displayTasks();
             });
         });
 
-        function showTab(name) {
-            const tasksTab = document.getElementById('tasksTab');
-            const daysTab = document.getElementById('daysTab');
-            if (name === 'tasks') {
-                tasksTab.style.display = 'block';
-                daysTab.style.display = 'none';
-                document.getElementById('tasksTabBtn').classList.add('active');
-                document.getElementById('daysTabBtn').classList.remove('active');
-            } else {
-                tasksTab.style.display = 'none';
-                daysTab.style.display = 'block';
-                document.getElementById('tasksTabBtn').classList.remove('active');
-                document.getElementById('daysTabBtn').classList.add('active');
-            }
-        }
-
-        document.getElementById('tasksTabBtn').addEventListener('click', () => showTab('tasks'));
-        document.getElementById('daysTabBtn').addEventListener('click', () => showTab('days'));
-
+        // إدارة الرمز
         function showLogin() {
             document.getElementById('adminInput').value = adminusername || '';
             document.getElementById('loginOverlay').style.display = 'flex';
         }
-
-        function handleLogin() {
-            const val = document.getElementById('adminInput').value.replace('@','').trim();
-            if (!val) return;
-            localStorage.setItem('adminusername', val);
-            adminusername = val;
+        document.getElementById('loginBtn').addEventListener('click', ()=>{
+            const v = document.getElementById('adminInput').value.replace('@','').trim();
+            if(!v) return;
+            localStorage.setItem('adminusername', v);
+            adminusername = v;
             document.getElementById('loginOverlay').style.display = 'none';
             loadTasks();
-        }
+        });
 
-        document.getElementById('loginBtn').addEventListener('click', handleLogin);
-
-        // إضافة الأنماط المتحركة
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(-50%) translateY(-20px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-            }
-            
-            @keyframes slideOut {
-                from {
-                    transform: translateX(-50%) translateY(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(-50%) translateY(-20px);
-                    opacity: 0;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // تحديث تلقائي كل 30 ثانية
+        // بدء التشغيل
         setInterval(loadTasks, 30000);
-
-        // تحميل المهام عند بدء التشغيل
-        window.addEventListener('load', () => {
-            showTab('tasks');
-            if (!adminusername) {
-                showLogin();
-            } else {
-                loadTasks();
-            }
+        window.addEventListener('load', ()=>{
+            if(!adminusername) showLogin();
+            else loadTasks();
         });
     </script>
 </body>
 </html>
-
-
-
