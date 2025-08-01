@@ -8,6 +8,384 @@
     <link rel="icon" href="https://img.icons8.com/ios-filled/32/8a2be2/checklist.png" sizes="32x32" type="image/png">
     <link rel="icon" href="https://img.icons8.com/ios-filled/16/8a2be2/checklist.png" sizes="16x16" type="image/png">
     <style>
+       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --font-family: 'Inter', sans-serif;
+  --bg-color: #F9F9F9;
+  --surface-color: #FFFFFF;
+  --text-primary: #333333;
+  --text-secondary: #666666;
+  --accent-color: #A3BFD9; /* لمسة هادئة */
+  --border-radius: 12px;
+  --shadow-light: rgba(0, 0, 0, 0.05);
+  --shadow-strong: rgba(0, 0, 0, 0.1);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family), sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  min-height: 100vh;
+  padding: 20px;
+}
+
+#loginOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+#loginBox {
+  background: var(--surface-color);
+  padding: 30px;
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 8px var(--shadow-light);
+  text-align: center;
+}
+
+#loginBox input {
+  padding: 10px;
+  border-radius: var(--border-radius);
+  border: 1px solid #ccc;
+  width: 200px;
+  margin-bottom: 10px;
+}
+
+#loginBox button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  background: var(--accent-color);
+  color: #fff;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 30px;
+  box-shadow: 0 4px 12px var(--shadow-light), 0 2px 6px var(--shadow-strong);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 2.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.header p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-top: 8px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px var(--shadow-strong);
+}
+
+.stat-card .icon {
+  font-size: 2.5rem;
+  color: var(--accent-color);
+  margin-bottom: 12px;
+}
+
+.stat-card .number {
+  font-size: 2rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.stat-card .label {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.filter-btn,
+.refresh-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.filter-btn {
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px var(--shadow-light);
+  transition: background-color 0.2s ease;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+.refresh-btn {
+  background-color: var(--accent-color);
+  color: #fff;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s ease;
+}
+
+.refresh-btn:hover {
+  opacity: 0.9;
+}
+
+.finish-day-btn {
+  background-color: #ff7f50;
+  color: #fff;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.finish-day-btn:hover {
+  opacity: 0.9;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.tab-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px var(--shadow-light);
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+.days-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.day-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: var(--border-radius);
+  background-color: var(--surface-color);
+  box-shadow: 0 1px 4px var(--shadow-light);
+  cursor: pointer;
+}
+
+.day-btn.active {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+.tasks-container {
+  display: grid;
+  gap: 20px;
+}
+
+.task-card {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 24px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.task-card.deleted {
+  opacity: 0.6;
+  text-decoration: line-through;
+}
+
+.task-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 16px var(--shadow-strong);
+}
+
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.task-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.task-id {
+  background-color: var(--accent-color);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+}
+
+.task-description {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+
+.meta-item {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-right: 12px;
+}
+
+.priority-badge,
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.priority-high { background-color: #FECACA; color: #B91C1C; }
+.priority-medium { background-color: #FDE68A; color: #92400E; }
+.priority-low { background-color: #BFDBFE; color: #1E40AF; }
+
+.status-completed { background-color: #D1FAE5; color: #065F46; }
+.status-pending   { background-color: #FEF3C7; color: #92400E; }
+.status-deleted   { background-color: #E5E7EB; color: #6B7280; }
+
+.task-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.complete-btn,
+.delete-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.complete-btn {
+  background-color: #34D399;
+  color: #fff;
+}
+
+.delete-btn {
+  background-color: #F87171;
+  color: #fff;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: var(--accent-color);
+  margin-bottom: 16px;
+}
+
+.empty-state h3 {
+  font-size: 1.2rem;
+}
+
+/* Telegram Info */
+.telegram-info {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  margin-bottom: 40px;
+}
+
+.telegram-info h3 {
+  font-size: 1.15rem;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.telegram-info p {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .stats { grid-template-columns: 1fr; }
+  .tasks-container { grid-template-columns: 1fr; }
+  .controls { flex-direction: column; }
+}
+
+=======
         * { margin:0; padding:0; box-sizing:border-box; }
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -271,6 +649,20 @@
                 <div class="stat-number" id="totalTasks">0</div>
                 <div class="stat-label">إجمالي المهام</div>
             </div>
+
+            <div class="controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">جميع المهام</button>
+                    <button class="filter-btn" data-filter="pending">المعلقة</button>
+                    <button class="filter-btn" data-filter="completed">المكتملة</button>
+                    <button class="filter-btn" data-filter="deleted">المحذوفة</button>
+                    <button class="filter-btn" data-filter="high">عالية الأولوية</button>
+                </div>
+                <button class="refresh-btn" onclick="loadTasks()">
+                    <span>🔄</span>
+                    تحديث
+                </button>
+                <button class="finish-day-btn" onclick="showLogin()">تغيير الرمز</button>
             <div class="stat-card" data-filter="pending">
                 <div class="stat-number" id="pendingTasks">0</div>
                 <div class="stat-label">مهام معلقة</div>
@@ -339,6 +731,14 @@
             document.getElementById('tasksContainer').innerHTML = '';
 
             try {
+                // محاولة قراءة ملف المهام
+                const response = await fetch('tasks.json?admin=' + encodeURIComponent(adminusername));
+
+                if (response.ok) {
+                    const data = await response.json();
+                    tasks = (data.tasks || [])
+                        .filter(t => t.adminusername === adminusername)
+                        .map(t => ({ deleted: t.deleted || false, ...t }));
                 const res = await fetch('tasks.json?admin=' + encodeURIComponent(adminusername));
                 if (res.ok) {
                     const data = await res.json();
@@ -362,6 +762,15 @@
                             archivedAt: t.archivedAt||t.archivedat
                         }));
                 }
+
+                updateStats();
+                displayTasks();
+                displayArchivedDays();
+            } catch (error) {
+                console.log('لم يتم العثور على ملف المهام، سيتم استخدام بيانات تجريبية');
+                tasks = generateSampleTasks()
+                    .filter(t => t.adminusername === adminusername)
+                    .map(t => ({ deleted: t.deleted || false, ...t }));
             } catch (e) {
                 console.log('استخدام بيانات تجريبية');
                 tasks = generateSampleTasks().filter(t => t.adminusername === adminusername);
@@ -376,6 +785,101 @@
         // بيانات تجريبية
         function generateSampleTasks() {
             return [
+                {
+                    id: 1,
+                    title: "تحضير التقرير الشهري",
+                    description: "إعداد تقرير شامل عن أداء الشركة في الشهر الماضي",
+                    priority: "عالي",
+                    status: "جديد",
+                    completed: false,
+                    deleted: false,
+                    archived: false,
+                    createdAt: new Date(Date.now() - 86400000).toISOString(),
+                    userId: 123456789,
+                    username: "ahmed_user",
+                    adminusername: "admin1",
+                    tags: []
+                },
+                {
+                    id: 2,
+                    title: "شراء البقالة",
+                    description: "شراء الأساسيات من السوبر ماركت",
+                    priority: "متوسط",
+                    status: "مكتمل",
+                    completed: true,
+                    deleted: false,
+                    archived: false,
+                    createdAt: new Date(Date.now() - 172800000).toISOString(),
+                    completedAt: new Date(Date.now() - 86400000).toISOString(),
+                    userId: 123456789,
+                    username: "sara_user",
+                    adminusername: "admin1",
+                    tags: []
+                },
+                {
+                    id: 3,
+                    title: "حجز موعد الطبيب",
+                    description: "حجز موعد للفحص الدوري",
+                    priority: "عالي",
+                    status: "جديد",
+                    completed: false,
+                    deleted: false,
+                    archived: false,
+                    createdAt: new Date(Date.now() - 259200000).toISOString(),
+                    userId: 987654321,
+                    username: "mohammed_user",
+                    adminusername: "admin2",
+                    tags: []
+                },
+                {
+                    id: 4,
+                    title: "تنظيف السيارة",
+                    description: "",
+                    priority: "منخفض",
+                    status: "جديد",
+                    completed: false,
+                    deleted: false,
+                    archived: false,
+                    createdAt: new Date(Date.now() - 345600000).toISOString(),
+                    userId: 123456789,
+                    username: "ahmed_user",
+                    adminusername: "admin1",
+                    tags: []
+                },
+                {
+                    id: 5,
+                    title: "دفع فواتير الكهرباء",
+                    description: "دفع فاتورة الكهرباء قبل انتهاء الموعد النهائي",
+                    priority: "عالي",
+                    status: "مكتمل",
+                    completed: true,
+                    deleted: false,
+                    archived: true,
+                    archivedAt: new Date(Date.now() - 86400000).toISOString(),
+                    createdAt: new Date(Date.now() - 432000000).toISOString(),
+                    completedAt: new Date(Date.now() - 172800000).toISOString(),
+                    userId: 987654321,
+                    username: "fatima_user",
+                    adminusername: "admin2",
+                    tags: []
+                },
+                {
+                    id: 6,
+                    title: "مهام قديمة",
+                    description: "مثال ليوم سابق",
+                    priority: "متوسط",
+                    status: "مكتمل",
+                    completed: true,
+                    deleted: false,
+                    archived: true,
+                    archivedAt: new Date(Date.now() - 172800000).toISOString(),
+                    createdAt: new Date(Date.now() - 604800000).toISOString(),
+                    completedAt: new Date(Date.now() - 345600000).toISOString(),
+                    userId: 123456789,
+                    username: "ahmed_user",
+                    adminusername: "admin1",
+                    tags: []
+                }
                 { id:1, title:"تحضير التقرير الشهري", description:"...", priority:"عالي", status:"جديد", completed:false, deleted:false, archived:false, createdAt:new Date(Date.now()-86400000).toISOString(), username:"ahmed_user", adminusername:"admin1" },
                 { id:2, title:"شراء البقالة", description:"...", priority:"متوسط", status:"مكتمل", completed:true, deleted:false, archived:false, createdAt:new Date(Date.now()-172800000).toISOString(), completedAt:new Date(Date.now()-86400000).toISOString(), username:"sara_user", adminusername:"admin1" },
                 { id:3, title:"حجز موعد الطبيب", description:"...", priority:"عالي", status:"جديد", completed:false, deleted:false, archived:false, createdAt:new Date(Date.now()-259200000).toISOString(), username:"mohammed_user", adminusername:"admin2" },
@@ -386,6 +890,11 @@
 
         // تحديث الأرقام في البطاقات
         function updateStats() {
+            const activeTasks = tasks.filter(t => !t.deleted);
+            const totalTasks = activeTasks.length;
+            const pendingTasks = activeTasks.filter(task => !task.completed).length;
+            const completedTasks = activeTasks.filter(task => task.completed).length;
+            const highPriorityTasks = activeTasks.filter(task => task.priority === 'عالي' && !task.completed).length;
             const active = tasks.filter(t => !t.archived);
             document.getElementById('totalTasks').textContent = active.length;
             document.getElementById('pendingTasks').textContent = active.filter(t => !t.completed).length;
@@ -422,6 +931,36 @@
                     </div>`;
                 return;
             }
+
+            container.innerHTML = filteredTasks.map(task => createTaskCard(task)).join('');
+        }
+
+        // تصفية المهام
+        function filterTasks() {
+            switch(currentFilter) {
+                case 'pending':
+                    return tasks.filter(task => !task.completed && !task.deleted);
+                case 'completed':
+                    return tasks.filter(task => task.completed && !task.deleted);
+                case 'deleted':
+                    return tasks.filter(task => task.deleted);
+                case 'high':
+                    return tasks.filter(task => task.priority === 'عالي' && !task.completed && !task.deleted);
+                default:
+                    return tasks.filter(task => !task.completed && !task.deleted);
+            }
+        }
+
+        // إنشاء بطاقة المهمة
+        function createTaskCard(task) {
+            const priorityClass = `${task.priority === 'عالي' ? 'high' : task.priority === 'متوسط' ? 'medium' : 'low'}-priority`;
+            const statusClass = task.deleted ? 'deleted' : (task.completed ? 'completed' : '');
+            const statusIcon = task.deleted ? '🗑️' : (task.completed ? '✅' : '⏳');
+            const priorityIcon = {
+                'عالي': '🔥',
+                'متوسط': '📋',
+                'منخفض': '📝'
+            }[task.priority] || '📋';
             container.innerHTML = filtered.map(createTaskCard).join('');
         }
 
@@ -438,6 +977,51 @@
                         <div class="task-title">${si} ${t.title}</div>
                         ${t.description?`<div class="task-description">${t.description}</div>`:''}
                     </div>
+                    
+                    <div class="task-meta">
+                        <div class="meta-item">
+                            <span class="meta-icon">${priorityIcon}</span>
+                            <span class="priority-badge priority-${task.priority === 'عالي' ? 'high' : task.priority === 'متوسط' ? 'medium' : 'low'}">
+                                ${task.priority}
+                            </span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="meta-icon">📊</span>
+                            <span class="status-badge status-${task.deleted ? 'deleted' : (task.completed ? 'completed' : 'pending')}">
+                                ${task.status}
+                            </span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="meta-icon">👤</span>
+                            <span>@${task.username}</span>
+                        </div>
+                        
+                        <div class="meta-item">
+                            <span class="meta-icon">📅</span>
+                            <span>${formatDate(task.createdAt)}</span>
+                        </div>
+                        
+                        ${task.completedAt ? `
+                            <div class="meta-item">
+                                <span class="meta-icon">✅</span>
+                                <span>${formatDate(task.completedAt)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="task-actions">
+                        ${!task.completed && !task.deleted ? `
+                            <button class="action-btn complete-btn" onclick="completeTask(${task.id})">
+                                ✅ إكمال
+                            </button>
+                        ` : ''}
+                        ${!task.deleted ? `
+                            <button class="action-btn delete-btn" onclick="deleteTask(${task.id})">
+                                🗑️ حذف
+                            </button>
+                        ` : ''}
                     <div class="task-id">#${t.id}</div>
                 </div>
                 <div class="task-meta">
@@ -476,6 +1060,27 @@
         // إكمال مهمة
         async function completeTask(id) {
             try {
+                const response = await fetch('/complete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: taskId }),
+                });
+                if (!response.ok) throw new Error('Fetch failed');
+                
+                // حدّث الحالة محليّاً بعد نجاح الطلب
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = true;
+                    task.status = 'مكتمل';
+                    task.completedAt = new Date().toISOString();
+                    updateStats();
+                    displayTasks();
+                    showNotification('تم إكمال المهمة بنجاح! ✅', 'success');
+                }
+            } catch (err) {
+                showNotification('فشل إكمال المهمة ❌', 'error');
+            }
+        }
                 const res = await fetch('/complete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
                 if(!res.ok) throw '';
                 const t = tasks.find(x=>x.id===id);
@@ -489,6 +1094,28 @@
         async function deleteTask(id) {
             if(!confirm('هل أنت متأكد؟')) return;
             try {
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ id: taskId }),
+                });
+
+                if (response.ok) {
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.deleted = true;
+                        task.status = 'محذوفة';
+                    }
+                    updateStats();
+                    displayTasks();
+                    showNotification('تم حذف المهمة 🗑️', 'success');
+                } else {
+                    showNotification('حدث خطأ أثناء حذف المهمة ❌', 'error');
+                }
+            } catch (err) {
+                showNotification('فشل الاتصال بالخادم ❌', 'error');
                 const res=await fetch('/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id})});
                 if(!res.ok) throw '';
                 const t=tasks.find(x=>x.id===id);
