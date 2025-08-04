@@ -9,9 +9,15 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+<<<<<<< HEAD
+const TASKS_FILE = path.join(__dirname, 'tasks.json');
+const AUTO_ARCHIVE_HOURS = 12; // المدة قبل الأرشفة التلقائية
+const CHECK_INTERVAL = 60 * 60 * 1000; // ساعة للتحقق الدوري
+=======
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://vxskgruvkdppbrjrjzib.supabase.co';
 const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ4c2tncnV2a2RwcGJyanJqemliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE5Njc4ODUsImV4cCI6MjA2NzU0Mzg4NX0.3MIlGwTuu32TOND5pN6HhwMDUiiIh70hp-G28d-u9a0';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+>>>>>>> origin/master
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
 const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
@@ -124,6 +130,19 @@ app.use(express.static('public'));
 
 // 🔁 تحميل المهام من قاعدة البيانات
 async function loadTasks() {
+<<<<<<< HEAD
+    try {
+        const data = await fs.readFile(TASKS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch {
+        console.log('⚠️ لا يوجد ملف مهام، يتم إنشاء ملف جديد...');
+        return {
+            tasks: [],
+            counter: 1,
+            lastUpdated: new Date().toISOString(),
+            lastFinished: new Date().toISOString()
+        };
+=======
     const { data, error } = await supabase
         .from('tasks')
         .select('*')
@@ -131,6 +150,7 @@ async function loadTasks() {
     if (error) {
         console.error('❌ خطأ في قراءة المهام:', error);
         return { tasks: [], counter: 1, lastUpdated: null, lastFinished: null };
+>>>>>>> origin/master
     }
     let lastUpdated = null;
     let lastFinished = null;
@@ -190,6 +210,20 @@ async function finishDay() {
     // الأرشفة معطلة حالياً
 }
 
+// ⏹️ أرشفة جميع المهام الحالية
+async function finishDay() {
+    const data = await loadTasks();
+    const now = new Date().toISOString();
+    data.tasks.forEach(task => {
+        if (!task.archived) {
+            task.archived = true;
+            task.archivedAt = now;
+        }
+    });
+    data.lastFinished = now;
+    await saveTasks(data);
+}
+
 // ✅ نقطة اختبار
 app.get('/', (req, res) => {
     res.send('Telegram bot is running...');
@@ -225,6 +259,31 @@ app.post('/delete', async (req, res) => {
     }
 });
 
+<<<<<<< HEAD
+// ✅ إنهاء اليوم (أرشفة جميع المهام)
+app.post('/finish_day', async (req, res) => {
+    await finishDay();
+    res.json({ success: true });
+});
+
+// فحص أولي عند التشغيل
+(async () => {
+    const data = await loadTasks();
+    const last = new Date(data.lastFinished || data.lastUpdated);
+    if (Date.now() - last.getTime() > AUTO_ARCHIVE_HOURS * 60 * 60 * 1000) {
+        await finishDay();
+    }
+})();
+
+setInterval(async () => {
+    const data = await loadTasks();
+    const last = new Date(data.lastFinished || data.lastUpdated);
+    if (Date.now() - last.getTime() > AUTO_ARCHIVE_HOURS * 60 * 60 * 1000) {
+        await finishDay();
+        console.log('✅ تم إنهاء اليوم تلقائياً');
+    }
+}, CHECK_INTERVAL);
+=======
 // ✅ إنهاء اليوم - الأرشفة معطلة حالياً
 app.post('/finish_day', (req, res) => {
     res.json({ success: true, message: 'archiving disabled' });
@@ -232,6 +291,7 @@ app.post('/finish_day', (req, res) => {
 
 // فحص أولي عند التشغيل
 // تم تعطيل الأرشفة التلقائية
+>>>>>>> origin/master
 
 // ✅ تشغيل السيرفر
 app.listen(PORT, () => {
@@ -372,6 +432,15 @@ bot.on('message', async (msg) => {
         title: state.data.title,
         description: state.data.description,
         priority: state.data.priority,
+<<<<<<< HEAD
+        status: selected,
+        completed: selected === 'مكتمل',
+        createdAt: new Date().toISOString(),
+        completedAt: selected === 'مكتمل' ? new Date().toISOString() : undefined,
+        archived: false,
+        archivedAt: null,
+        userId: msg.from.id,
+=======
         status: state.data.status,
         completed: state.data.status === 'مكتمل',
         deleted: false,
@@ -379,6 +448,7 @@ bot.on('message', async (msg) => {
         createdat: new Date().toISOString(),
         completedat: state.data.status === 'مكتمل' ? new Date().toISOString() : null,
         userid: msg.from.id,
+>>>>>>> origin/master
         username: msg.from.username || msg.from.first_name,
         adminusername: state.data.adminusername,
         tags: []
