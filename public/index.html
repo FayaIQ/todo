@@ -473,6 +473,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- Header -->
@@ -908,13 +909,40 @@
             `;
         }
 
-       // Complete Task
+        // Complete Task
         async function completeTask(taskId) {
-            const task = tasks.find(t => t.id === taskId);
-            if (task) {
-                task.completed = true;
-                task.status = 'مكتمل';
-                task.completedAt = new Date().toISOString();
+            try {
+                const response = await fetch('/complete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ taskId })
+                });
+                
+                if (response.ok) {
+                    // Update task locally
+                    const task = tasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.completed = true;
+                        task.status = 'مكتمل';
+                        task.completedAt = new Date().toISOString();
+                    }
+                    
+                    updateStats();
+                    displayCurrentTab();
+                    showNotification('تم إكمال المهمة بنجاح!', 'success');
+                } else {
+                    showNotification('حدث خطأ في إكمال المهمة', 'error');
+                }
+            } catch (error) {
+                // Fallback for demo - update locally
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = true;
+                    task.status = 'مكتمل';
+                    task.completedAt = new Date().toISOString();
+                }
                 
                 updateStats();
                 displayCurrentTab();
@@ -924,8 +952,33 @@
 
         // Delete Task
         async function deleteTask(taskId) {
-            if (confirm('هل أنت متأكد من حذف هذه المهمة؟')) {
+            if (!confirm('هل أنت متأكد من حذف هذه المهمة؟')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ taskId })
+                });
+                
+                if (response.ok) {
+                    // Remove task locally
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    
+                    updateStats();
+                    displayCurrentTab();
+                    showNotification('تم حذف المهمة بنجاح!', 'success');
+                } else {
+                    showNotification('حدث خطأ في حذف المهمة', 'error');
+                }
+            } catch (error) {
+                // Fallback for demo - delete locally
                 tasks = tasks.filter(t => t.id !== taskId);
+                
                 updateStats();
                 displayCurrentTab();
                 showNotification('تم حذف المهمة بنجاح!', 'success');
@@ -933,66 +986,113 @@
         }
 
         // End Current Day
-        function endCurrentDay() {
-            if (confirm('هل تريد إنهاء اليوم الحالي وأرشفة جميع المهام؟')) {
-                const currentDate = new Date();
+        async function endCurrentDay() {
+            if (!confirm('هل أنت متأكد من إنهاء اليوم الحالي؟ سيتم أرشفة جميع المهام.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/end-day', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        date: new Date().toISOString(),
+                        tasks: tasks
+                    })
+                });
                 
-                // Create archived day
-                const archivedDay = {
-                    date: dayStartTime.toISOString(),
-                    endDate: currentDate.toISOString(),
-                    tasks: [...tasks]
-                };
-                
-                archivedDays.unshift(archivedDay);
-                
-                // Reset for new day
-                tasks = [];
-                dayStartTime = new Date();
-                
-                updateStats();
-                displayCurrentTab();
-                startDayTimer();
+                if (response.ok) {
+                    // Archive current day
+                    archiveCurrentDay();
+                    showNotification('تم إنهاء اليوم وأرشفة المهام بنجاح!', 'success');
+                } else {
+                    showNotification('حدث خطأ في إنهاء اليوم', 'error');
+                }
+            } catch (error) {
+                // Fallback for demo - archive locally
+                archiveCurrentDay();
                 showNotification('تم إنهاء اليوم وأرشفة المهام بنجاح!', 'success');
             }
         }
 
+        // Archive Current Day
+        function archiveCurrentDay() {
+            const today = new Date();
+            const archivedDay = {
+                date: dayStartTime.toISOString(),
+                endDate: today.toISOString(),
+                tasks: [...tasks]
+            };
+            
+            archivedDays.unshift(archivedDay);
+            tasks = [];
+            dayStartTime = new Date();
+            
+            updateStats();
+            displayCurrentTab();
+            startDayTimer();
+        }
+
         // Start Day Timer
         function startDayTimer() {
-            clearInterval(dayTimer);
+            if (dayTimer) {
+                clearInterval(dayTimer);
+            }
             
-            dayTimer = setInterval(() => {
-                const now = new Date();
-                const endOfDay = new Date(dayStartTime);
-                endOfDay.setHours(23, 59, 59, 999);
-                
-                const remaining = endOfDay - now;
-                
-                if (remaining <= 0) {
-                    document.getElementById('dayTimer').textContent = '00:00';
-                    clearInterval(dayTimer);
-                    return;
-                }
-                
-                const hours = Math.floor(remaining / (1000 * 60 * 60));
-                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-                
-                document.getElementById('dayTimer').textContent = 
-                    `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-            }, 1000);
+            dayTimer = setInterval(updateDayTimer, 1000);
+            updateDayTimer();
+        }
+
+        // Update Day Timer
+        function updateDayTimer() {
+            const now = new Date();
+            const startOfDay = new Date(dayStartTime);
+            const timeDiff = now - startOfDay;
+            
+            // Calculate hours and minutes since day started
+            const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+            const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            const timerDisplay = document.getElementById('dayTimer');
+            if (timerDisplay) {
+                timerDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
         }
 
         // Format Date
         function formatDate(dateString) {
             const date = new Date(dateString);
-            const options = {
+            const now = new Date();
+            
+            if (date.toDateString() === now.toDateString()) {
+                return `اليوم ${date.toLocaleTimeString('ar-SA', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                })}`;
+            }
+            
+            const yesterday = new Date(now);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            if (date.toDateString() === yesterday.toDateString()) {
+                return `أمس ${date.toLocaleTimeString('ar-SA', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: true 
+                })}`;
+            }
+            
+            return date.toLocaleDateString('ar-SA', {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
                 hour: '2-digit',
-                minute: '2-digit'
-            };
-            return date.toLocaleDateString('ar-SA', options);
+                minute: '2-digit',
+                hour12: true
+            });
         }
 
         // Show Notification
@@ -1004,32 +1104,42 @@
             document.body.appendChild(notification);
             
             setTimeout(() => {
-                notification.remove();
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
             }, 3000);
         }
 
-        // Show/Hide Loading
+        // Show Loading
         function showLoading(show) {
-            const loadingElement = document.getElementById('loadingState');
-            const contentElements = document.querySelectorAll('.tab-content:not(#loadingState)');
+            const loadingState = document.getElementById('loadingState');
+            const contentArea = document.querySelector('.content-area');
             
             if (show) {
-                loadingElement.style.display = 'block';
-                contentElements.forEach(el => el.style.display = 'none');
+                loadingState.style.display = 'block';
+                contentArea.style.opacity = '0.5';
             } else {
-                loadingElement.style.display = 'none';
-                contentElements.forEach(el => el.style.display = '');
-                displayCurrentTab();
+                loadingState.style.display = 'none';
+                contentArea.style.opacity = '1';
             }
         }
 
-        // Add New Task (can be called externally)
-        function addTask(title, description, priority = 'متوسط') {
+        // Add Task Function (يمكن إضافتها لاحقاً)
+        function addTask() {
+            const title = prompt('أدخل عنوان المهمة:');
+            if (!title) return;
+            
+            const description = prompt('أدخل وصف المهمة (اختياري):') || '';
+            const priority = prompt('أدخل أولوية المهمة (عالي/متوسط/منخفض):') || 'متوسط';
+            
             const newTask = {
-                id: Math.max(...tasks.map(t => t.id), 0) + 1,
-                title: title,
-                description: description,
-                priority: priority,
+                id: Date.now(),
+                title,
+                description,
+                priority,
                 status: 'معلق',
                 completed: false,
                 createdAt: new Date().toISOString(),
@@ -1041,79 +1151,102 @@
             updateStats();
             displayCurrentTab();
             showNotification('تم إضافة المهمة بنجاح!', 'success');
-            
-            return newTask;
-        }
-
-        // Search Tasks
-        function searchTasks(query) {
-            const filtered = tasks.filter(task => 
-                task.title.toLowerCase().includes(query.toLowerCase()) ||
-                task.description.toLowerCase().includes(query.toLowerCase())
-            );
-            return filtered;
-        }
-
-        // Export Data
-        function exportData() {
-            const data = {
-                tasks: tasks,
-                archivedDays: archivedDays,
-                dayStartTime: dayStartTime.toISOString(),
-                exportDate: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `tasks-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
         }
 
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey) {
-                switch(e.key) {
-                    case '1':
-                        e.preventDefault();
-                        switchTab('all');
-                        break;
-                    case '2':
-                        e.preventDefault();
-                        switchTab('today');
-                        break;
-                    case '3':
-                        e.preventDefault();
-                        switchTab('pending');
-                        break;
-                    case '4':
-                        e.preventDefault();
-                        switchTab('completed');
-                        break;
-                    case '5':
-                        e.preventDefault();
-                        switchTab('high');
-                        break;
-                    case '6':
-                        e.preventDefault();
-                        switchTab('archive');
-                        break;
+            // Ctrl/Cmd + N: Add new task
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                e.preventDefault();
+                addTask();
+            }
+            
+            // Ctrl/Cmd + E: End day
+            if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+                e.preventDefault();
+                endCurrentDay();
+            }
+            
+            // Number keys for tab switching
+            if (e.key >= '1' && e.key <= '6') {
+                const tabs = ['all', 'today', 'pending', 'completed', 'high', 'archive'];
+                const tabIndex = parseInt(e.key) - 1;
+                if (tabs[tabIndex]) {
+                    switchTab(tabs[tabIndex]);
                 }
             }
         });
 
-        // Auto-save functionality (if needed)
+        // Auto-save functionality
         setInterval(() => {
-            // This would save to localStorage or send to server
-            // localStorage.setItem('todoAppData', JSON.stringify({
-            //     tasks: tasks,
-            //     archivedDays: archivedDays,
-            //     dayStartTime: dayStartTime
-            // }));
-        }, 30000); // Auto-save every 30 seconds
+            try {
+                const data = {
+                    tasks,
+                    archivedDays,
+                    dayStartTime: dayStartTime.toISOString()
+                };
+                
+                // Save to localStorage as fallback
+                localStorage.setItem('todoAppData', JSON.stringify(data));
+            } catch (error) {
+                console.log('Auto-save failed:', error);
+            }
+        }, 30000); // Save every 30 seconds
 
+        // Load from localStorage if available
+        function loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('todoAppData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    tasks = data.tasks || tasks;
+                    archivedDays = data.archivedDays || archivedDays;
+                    dayStartTime = data.dayStartTime ? new Date(data.dayStartTime) : dayStartTime;
+                }
+            } catch (error) {
+                console.log('Failed to load from localStorage:', error);
+            }
+        }
+
+        // Initialize localStorage fallback
+        loadFromLocalStorage();
+
+        // Add floating action button for adding tasks
+        const fab = document.createElement('button');
+        fab.innerHTML = '➕';
+        fab.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-color);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        `;
+        
+        fab.addEventListener('click', addTask);
+        fab.addEventListener('mouseenter', () => {
+            fab.style.transform = 'scale(1.1)';
+            fab.style.boxShadow = '0 8px 20px rgba(74, 144, 226, 0.4)';
+        });
+        fab.addEventListener('mouseleave', () => {
+            fab.style.transform = 'scale(1)';
+            fab.style.boxShadow = '0 4px 12px rgba(74, 144, 226, 0.3)';
+        });
+        
+        document.body.appendChild(fab);
+
+        // Welcome message
+        setTimeout(() => {
+            showNotification('مرحباً بك في قائمة المهام الذكية! استخدم Ctrl+N لإضافة مهمة جديدة', 'info');
+        }, 1000);
     </script>
 </body>
 </html>

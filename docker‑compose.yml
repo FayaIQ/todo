@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  telegram-todo-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: telegram-todo-bot
+    restart: always
+    environment:
+      - PORT=3000
+      - TELEGRAM_TOKEN=your_token_here
