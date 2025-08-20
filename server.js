@@ -17,7 +17,7 @@ const SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6Ik
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // نقرأ التوكن من متغير البيئة لزيادة الأمان
-const TOKEN = process.env.BOT_TOKEN || '7627854214:AAHx-_W9mjYniLOILUe0EwY3mNMlwSRnGJs';
+const TOKEN = process.env.BOT_TOKEN || '7627854214:AAFc3DtoGlrLNFekci_Rxc5iFdE0mGzh2IU';
 const bot = new TelegramBot(TOKEN, { polling: true });
 const userStates = {}; // لحفظ حالة المستخدم بين الرسائل
 let BOT_USERNAME = process.env.BOT_USERNAME;
